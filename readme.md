@@ -20,7 +20,7 @@ El objetivo principal de este sistema es desarrollar un vehículo autónomo func
 3. Permita el control remoto manual mediante un control Bluetooth.
 4. Integre un brazo robótico capaz de manipular objetos durante el recorrido.
 5. Utilice un giroscopio para mantener orientación y estabilidad durante la navegación.
-6. 
+
 ## Arquitectura general del sistema
 
 El AGV está compuesto por varios subsistemas electrónicos y de control que trabajan en conjunto para lograr un desplazamiento seguro y eficiente:
