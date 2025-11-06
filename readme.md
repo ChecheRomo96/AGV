@@ -41,7 +41,7 @@ Uno en el costado derecho (**SR**).
 **Módulo de puente H BTS7960**: controla los motores de tracción del vehículo.
 **Control remoto Bluetooth**: permite operar el AGV en modo manual (adelante, atrás, giro, frenado, etc.).
 
-3. Sistema de actuación
+### 3. Sistema de actuación
 **Motores DC**: accionan las ruedas principales mediante el puente H.
 **Brazo robótico**: montado sobre la base del vehículo, controlado de manera coordinada con el desplazamiento.
 **Servomotores adicionales** (si aplica): utilizados para la articulación del brazo o tareas complementarias.
