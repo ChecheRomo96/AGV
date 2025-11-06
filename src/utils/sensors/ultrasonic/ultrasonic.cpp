@@ -1,6 +1,8 @@
 #include "ultrasonic.h"
 #include "../../utils.h"
 
+#include <Arduino.h>
+
 namespace Utils::Sensors {
 
     Ultrasonic::Ultrasonic() noexcept
@@ -28,40 +30,45 @@ namespace Utils::Sensors {
         _GetTime = getTime;
         _ReadEcho = readEcho;
         _WriteTrigger = writeTrigger;
+
+        if(_Setup){_Setup();}
     }
 
-    void Ultrasonic::OnISR() noexcept { //On Falling edge
-        _EchoEnd = _GetTime();
-        _EchoComplete = true;
+    void Ultrasonic::OnISR() noexcept {
+        if (_ReadEcho && _GetTime) {
+            if (_ReadEcho()) {
+                _EchoStart = _GetTime();
+                _EchoComplete = false;
+            } else {
+                _EchoEnd = _GetTime();
+                _EchoComplete = true;
+            }
+        }
     }
 
     bool Ultrasonic::Update(uint32_t currentTimeTicks) noexcept {
         if(_GetTime == nullptr || _WriteTrigger == nullptr){
-            return false; // no inicializado
+            return false;
         }
 
-        // ¿Nueva medición?
+        //Serial.println("Ultrasonic Update");
+
+        // Nueva medición
         if(Utils::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
             _LastUpdateTime = currentTimeTicks;
 
-            // Iniciar pulso TRIG
+            // Pulso TRIG
             _WriteTrigger(true);
             Utils::Time::DelayTicks(_TriggerPulseTicks, _GetTime);
             _WriteTrigger(false);
 
-            _EchoStart = currentTimeTicks;
+            //Serial.println("Ultrasonic Triggered");
         }
-        
+
         if (_EchoComplete) {
             uint32_t durationTicks = _EchoEnd - _EchoStart;
-
-            // Convierte ticks a segundos
             float durationSec = (float)durationTicks / _TickFreq;
-
-            // Velocidad del sonido ≈ 343 m/s
-            // Ida y vuelta → dividir entre 2
-            _Distance = (durationSec * _SpeedOfSound) / 2.0f;  // resultado en metros
-
+            _Distance = (durationSec * _SpeedOfSound) / 2.0f;  // en metros
             _EchoComplete = false;
             return true;
         }
@@ -77,7 +84,7 @@ namespace Utils::Sensors {
     }
 
     float Ultrasonic::GetDistance() const{
-        return _Distance * _DistanceUnits;
+        return _Distance * _UnitScale;
     }
 
     void Ultrasonic::SetSpeedOfSound(float metersPerSecond) noexcept{
