@@ -44,7 +44,6 @@ Uno en el costado derecho (**SR**).
 ### 3. Sistema de actuación
 **Motores DC**: accionan las ruedas principales mediante el puente H.
 **Brazo robótico**: montado sobre la base del vehículo, controlado de manera coordinada con el desplazamiento.
-**Servomotores adicionales** (si aplica): utilizados para la articulación del brazo o tareas complementarias.
 
 ## Modos de operación
 
