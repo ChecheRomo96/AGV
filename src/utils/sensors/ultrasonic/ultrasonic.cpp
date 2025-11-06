@@ -1,4 +1,5 @@
 #include "ultrasonic.h"
+#include "../../utils.h"
 
 namespace Utils::Sensors {
 
@@ -29,26 +30,15 @@ namespace Utils::Sensors {
         _WriteTrigger = writeTrigger;
     }
 
-    void Ultrasonic::OnISR() noexcept {
-        bool EchoState = 0;
-
-        if(_ReadEcho){ EchoState = _ReadEcho(); }
-
-        if(EchoState){
-            _EchoStart = _GetTime();
-        }
-        else{
-            _EchoEnd = _GetTime();
-            _EchoComplete = true;
-        }
+    void Ultrasonic::OnISR() noexcept { //On Falling edge
+        _EchoEnd = _GetTime();
+        _EchoComplete = true;
     }
 
     bool Ultrasonic::Update(uint32_t currentTimeTicks) noexcept {
         if(_GetTime == nullptr || _WriteTrigger == nullptr){
             return false; // no inicializado
         }
-
-        /*
 
         // ¿Nueva medición?
         if(Utils::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
@@ -59,29 +49,72 @@ namespace Utils::Sensors {
             Utils::Time::DelayTicks(_TriggerPulseTicks, _GetTime);
             _WriteTrigger(false);
 
-            // Esperar a que llegue el eco o timeout
-            uint32_t startWait = _GetTime();
-            while(!_EchoComplete){
-                if(Utils::Time::DeltaTicks(_GetTime(), startWait) >= _TimeoutTicks){
-                    // Timeout: fuera de rango
-                    _Distance = -1.0f;
-                    return true;
-                }
-            }
+            _EchoStart = currentTimeTicks;
+        }
+        
+        if (_EchoComplete) {
+            uint32_t durationTicks = _EchoEnd - _EchoStart;
 
-            // Calcular distancia
-            uint32_t echoDurationTicks = DeltaTicks(_EchoEnd, _EchoStart);
-            float echoDurationSec = echoDurationTicks * _TickPeriod;
-            float distanceMeters = (echoDurationSec * _SpeedOfSound) / 2.0f;
-            _Distance = distanceMeters * _UnitScale;
+            // Convierte ticks a segundos
+            float durationSec = (float)durationTicks / _TickFreq;
 
-            // Reset estado ISR
+            // Velocidad del sonido ≈ 343 m/s
+            // Ida y vuelta → dividir entre 2
+            _Distance = (durationSec * _SpeedOfSound) / 2.0f;  // resultado en metros
+
             _EchoComplete = false;
-
             return true;
         }
-        */
         return false;
     }
+
+    void Ultrasonic::SetFs(float Fs){
+        _SamplingPeriodTicks = _TickFreq / Fs;
+    } 
+
+    void Ultrasonic::SetTs(float Ts){
+        _SamplingPeriodTicks = Ts * _TickFreq;
+    }
+
+    float Ultrasonic::GetDistance() const{
+        return _Distance * _DistanceUnits;
+    }
+
+    void Ultrasonic::SetSpeedOfSound(float metersPerSecond) noexcept{
+        _SpeedOfSound = metersPerSecond;
+    }
+
+    void Ultrasonic::SetTimeoutTicks(uint32_t ticks) noexcept{
+        _TimeoutTicks = ticks;
+    } 
+
+    void Ultrasonic::SetTriggerPulseTicks(uint32_t ticks) noexcept{
+        _TriggerPulseTicks = ticks;
+    }  
+
+    void Ultrasonic::SetDistanceUnits(DistanceUnits units) noexcept{
+        _DistanceUnits = units;
+        
+        switch (units) {
+            case m:
+                _UnitScale = 1.0f;
+                break;
+            case cm:
+                _UnitScale = 100.0f;
+                break;
+            case mm:
+                _UnitScale = 1000.0f;
+                break;
+        }
+    }        
+
+    void Ultrasonic::SetTimeBase(float tickPeriodSec) noexcept{
+        _TickFreq = 1.0f / tickPeriodSec;
+    }
+
+    void Ultrasonic::SetTimeFrequency(float freqHz) noexcept{
+        _TickFreq = freqHz;
+    }
+
 
 }
