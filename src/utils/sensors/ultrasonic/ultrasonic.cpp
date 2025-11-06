@@ -48,6 +48,8 @@ namespace Utils::Sensors {
             return false; // no inicializado
         }
 
+        /*
+
         // ¿Nueva medición?
         if(Utils::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
             _LastUpdateTime = currentTimeTicks;
@@ -78,7 +80,7 @@ namespace Utils::Sensors {
 
             return true;
         }
-
+        */
         return false;
     }
 
