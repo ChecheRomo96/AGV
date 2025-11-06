@@ -1,8 +1,7 @@
 #ifndef AGV_UTILS_SENSORS_ULTRASONIC_H
 #define AGV_UTILS_SENSORS_ULTRASONIC_H
 
-#include <stdint.h>
-#include <stdbool.h>
+    #include <stdint.h>
 
 namespace Utils::Sensors {
 
