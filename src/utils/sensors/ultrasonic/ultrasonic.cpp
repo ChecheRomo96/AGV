@@ -52,6 +52,8 @@ namespace Utils::Sensors {
         }
 
         //Serial.println("Ultrasonic Update");
+        //Serial.println(_TickFreq);
+
 
         // Nueva medición
         if(Utils::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
@@ -115,12 +117,16 @@ namespace Utils::Sensors {
         }
     }        
 
-    void Ultrasonic::SetTimeBase(float tickPeriodSec) noexcept{
+    void Ultrasonic::SetTimePeriod(float tickPeriodSec) noexcept {
+        if (tickPeriodSec <= 0.0f) return;  // evita división por cero
         _TickFreq = 1.0f / tickPeriodSec;
+        Serial.println("Tick Frequency: "+String(_TickFreq));
     }
 
-    void Ultrasonic::SetTimeFrequency(float freqHz) noexcept{
+    void Ultrasonic::SetTimeFrequency(float freqHz) noexcept {
+        if (freqHz <= 0.0f) return;         // evita frecuencias negativas o cero
         _TickFreq = freqHz;
+        Serial.println("Tick Frequency: "+String(_TickFreq));
     }
 
 

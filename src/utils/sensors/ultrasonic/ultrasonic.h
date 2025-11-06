@@ -49,7 +49,7 @@
             void SetDistanceUnits(DistanceUnits units) noexcept;        
             
             // Configuración del temporizador (tick = unidad de tiempo)
-            void SetTimeBase(float tickPeriodSec) noexcept;
+            void SetTimePeriod(float tickPeriodSec) noexcept;
             void SetTimeFrequency(float freqHz) noexcept;
 
         private:
