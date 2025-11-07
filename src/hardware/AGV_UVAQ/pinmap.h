@@ -1,0 +1,6 @@
+#ifndef AGV_UVAQ_PINMAP_H
+#define AGV_UVAQ_PINMAP_H
+
+
+
+#endif//AGV_UVAQ_PINMAP_H

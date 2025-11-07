@@ -1,9 +1,9 @@
-#ifndef AGV_UTILS_H
-#define AGV_UTILS_H
+#ifndef AGV_CORE_TIME_H
+#define AGV_CORE_TIME_H
 
     #include <stdint.h>
 
-    namespace Utils {
+    namespace AGV_Core {
         // Aquí pueden ir otras utilidades generales
         namespace Time {
             
@@ -16,7 +16,5 @@
         
     }
 
-    #include "sensors/sensors.h"
-    #include "actuators/actuators.h"
 
-#endif//AGV_UTILS_H
+#endif//AGV_CORE_TIME_H

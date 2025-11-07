@@ -1,41 +1,54 @@
 #ifndef AGV_UTILS_ACTUATORS_MOTOR_DRIVER_TPP
 #define AGV_UTILS_ACTUATORS_MOTOR_DRIVER_TPP
 
-namespace Utils::Actuators {
+namespace AGV_Core::Actuators {
 
     // Default constructor
     template<typename T>
     MotorDriver<T>::MotorDriver() noexcept
-        : _SetDirectionFn(nullptr),
+        : _InitFn(nullptr),
+          _SetDirectionFn(nullptr),
           _SetSpeedFn(nullptr),
           _SpeedRange(0),
+          _Speed(0),
           _Direction(Stopped),
           _DT(Unidirectional) {
     }
 
-    // Parameterized constructor
+    // Full parameterized constructor
     template<typename T>
-    MotorDriver<T>::MotorDriver(T SpeedRange, DirectionType DT) noexcept
-        : _SetDirectionFn(nullptr),
-          _SetSpeedFn(nullptr),
-          _SpeedRange(SpeedRange),
-          _Direction(Stopped),
-          _DT(Unidirectional) {
+    MotorDriver<T>::MotorDriver(T SpeedRange,
+                                DirectionType DT,
+                                InitFn initFn,
+                                SetDirectionFn dirFn,
+                                SetSpeedFn speedFn) noexcept{
+        Init(SpeedRange, DT, initFn, dirFn, speedFn);
     }
 
     // Initialization method
     template<typename T>
-    void MotorDriver<T>::Init(T SpeedRange, DirectionType DT, SetDirectionFn dirFn, SetSpeedFn speedFn) noexcept{
+    void MotorDriver<T>::Init(T SpeedRange,
+                              DirectionType DT,
+                              InitFn initFn,
+                              SetDirectionFn dirFn,
+                              SetSpeedFn speedFn) noexcept {
         _SpeedRange = SpeedRange;
+        _Speed = 0;
         _Direction = Stopped;
+        _DT = DT;
+        _InitFn = initFn;
         _SetDirectionFn = dirFn;
         _SetSpeedFn = speedFn;
-        _DT = DT;
 
-        _SetDirectionFn(Stopped);
-        _SetSpeedFn(0);
+        if (_InitFn)
+            _InitFn(); // Call hardware initializer if provided
+        
+        if(_SetDirectionFn)
+            _SetDirectionFn(_Direction); // Set initial direction
 
-        _Speed = 0;
+        if(_SetSpeedFn)
+            _SetSpeedFn(_Speed); // Set initial speed
+
     }
 
     // Set/Get Speed Range
@@ -53,7 +66,6 @@ namespace Utils::Actuators {
     template<typename T>
     void MotorDriver<T>::SetDirection(MotorState Direction) noexcept {
         _Direction = Direction;
-
         if (_SetDirectionFn)
             _SetDirectionFn(Direction);
     }
@@ -67,7 +79,6 @@ namespace Utils::Actuators {
     template<typename T>
     void MotorDriver<T>::SetSpeed(T speed) noexcept {
         _Speed = speed;
-
         if (_SetSpeedFn)
             _SetSpeedFn(speed);
     }
@@ -77,11 +88,11 @@ namespace Utils::Actuators {
         return _Speed;
     }
 
-    // Control Functions
+    // Control functions
     template<typename T>
     void MotorDriver<T>::Stop() noexcept {
-        if (_SetDirectionFn)
-            _SetDirectionFn(Stopped);
+        SetDirection(Stopped);
+        SetSpeed(0);
     }
 
     template<typename T>

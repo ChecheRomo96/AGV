@@ -1,5 +1,5 @@
 #include "ultrasonic.h"
-#include "../../utils.h"
+#include <core/time/time.h>
 
 namespace Utils::Sensors {
 
@@ -50,12 +50,12 @@ namespace Utils::Sensors {
         }
 
         // Nueva medición
-        if(Utils::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
+        if(AGV_Core::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
             _LastUpdateTime = currentTimeTicks;
 
             // Pulso TRIG
             _WriteTrigger(true);
-            Utils::Time::DelayTicks(_TriggerPulseTicks, _GetTime);
+            AGV_Core::Time::DelayTicks(_TriggerPulseTicks, _GetTime);
             _WriteTrigger(false);
 
             //Serial.println("Ultrasonic Triggered");

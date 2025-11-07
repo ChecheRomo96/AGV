@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "time.h"
 
 #ifdef ARDUINO
     #include <Arduino.h>
@@ -8,7 +8,7 @@
     
 #endif
 
-namespace Utils::Time {
+namespace AGV_Core::Time {
 
     uint32_t DeltaTicks(uint32_t currentTicks, uint32_t previousTicks) noexcept {
         return (currentTicks >= previousTicks) ?
