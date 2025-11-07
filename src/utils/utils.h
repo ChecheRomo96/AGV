@@ -2,7 +2,6 @@
 #define AGV_UTILS_H
 
     #include <stdint.h>
-    #include "sensors/sensors.h"
 
     namespace Utils {
         // Aquí pueden ir otras utilidades generales
@@ -17,5 +16,7 @@
         
     }
 
+    #include "sensors/sensors.h"
+    #include "actuators/actuators.h"
 
 #endif//AGV_UTILS_H

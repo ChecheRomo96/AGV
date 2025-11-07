@@ -41,7 +41,10 @@
             float GetDistance() const noexcept;
 
             // Opcional: compensaciones y robustez
-            void SetSpeedOfSound(float metersPerSecond) noexcept; // default ~343.2
+            inline void SetSpeedOfSound(float TempC = 20.0, float RH = 0.0) noexcept{
+                _SpeedOfSound = 331.3f + (0.606f * TempC) + (0.0124f * RH);
+            }
+
             void SetTimeoutTicks(uint32_t ticks) noexcept;        // para “no echo”
             void SetTriggerPulseTicks(uint32_t ticks) noexcept;   // ancho del pulso
 

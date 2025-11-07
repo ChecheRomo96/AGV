@@ -1,8 +1,6 @@
 #include "ultrasonic.h"
 #include "../../utils.h"
 
-#include <Arduino.h>
-
 namespace Utils::Sensors {
 
     Ultrasonic::Ultrasonic() noexcept
@@ -51,10 +49,6 @@ namespace Utils::Sensors {
             return false;
         }
 
-        //Serial.println("Ultrasonic Update");
-        //Serial.println(_TickFreq);
-
-
         // Nueva medición
         if(Utils::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks){
             _LastUpdateTime = currentTimeTicks;
@@ -89,10 +83,6 @@ namespace Utils::Sensors {
         return _Distance * _UnitScale;
     }
 
-    void Ultrasonic::SetSpeedOfSound(float metersPerSecond) noexcept{
-        _SpeedOfSound = metersPerSecond;
-    }
-
     void Ultrasonic::SetTimeoutTicks(uint32_t ticks) noexcept{
         _TimeoutTicks = ticks;
     } 
@@ -120,14 +110,11 @@ namespace Utils::Sensors {
     void Ultrasonic::SetTimePeriod(float tickPeriodSec) noexcept {
         if (tickPeriodSec <= 0.0f) return;  // evita división por cero
         _TickFreq = 1.0f / tickPeriodSec;
-        Serial.println("Tick Frequency: "+String(_TickFreq));
     }
 
     void Ultrasonic::SetTimeFrequency(float freqHz) noexcept {
         if (freqHz <= 0.0f) return;         // evita frecuencias negativas o cero
         _TickFreq = freqHz;
-        Serial.println("Tick Frequency: "+String(_TickFreq));
     }
-
 
 }
