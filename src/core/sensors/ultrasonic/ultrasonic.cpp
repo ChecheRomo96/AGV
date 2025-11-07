@@ -80,7 +80,7 @@ namespace Utils::Sensors {
     }
 
     float Ultrasonic::GetDistance() const{
-        return _Distance * _UnitScale;
+        return (_Offset + _Distance) * _UnitScale;
     }
 
     void Ultrasonic::SetTimeoutTicks(uint32_t ticks) noexcept{
