@@ -1,5 +1,5 @@
-#ifndef AVG_CORE_CONTROL_H
-#define AVG_CORE_CONTROL_H
+#ifndef AVG_CORE_PID_H
+#define AVG_CORE_PID_H
 
     #include <stdint.h>
 
@@ -38,10 +38,10 @@
                     
                     void CalculateBeta() noexcept;
                     void SetCoefficients() noexcept;
-                    void Reset() noexcept
+                    void Reset() noexcept;
             };
         }
     }
 
 
-#endif//AVG_CORE_CONTROL_H
+#endif//AVG_CORE_PID_H
