@@ -1,5 +1,6 @@
 #include <AGV_Core.h>
 #include "Encoder.h"
+#include "SerialParser.h"
 
 using namespace AGV_Core::Control;
 

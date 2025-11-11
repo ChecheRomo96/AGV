@@ -1,10 +1,10 @@
 #include "SerialParser.h"
 #include "Encoder.h"
 
-extern SpeedEncoder Enc;
+extern SpeedEncoder myEncoder;
 
 // ------------ Simple serial line buffer ------------
-extern String line;
+String line;
 
 // Print commands 
 void print_help() {
@@ -52,13 +52,13 @@ void handle_command(const String& cmd_in) {
   if (op == "MODE") {
     arg.trim(); arg = up(arg);
     if (arg == "A") {
-      Enc.SetDecodingMode(SpeedEncoder::DecodingMode::A);
+      myEncoder.SetDecodingMode(SpeedEncoder::DecodingMode::A);
       Serial.println(F("OK mode=A (X1 on A)"));
     } else if (arg == "B") {
-      Enc.SetDecodingMode(SpeedEncoder::DecodingMode::B);
+      myEncoder.SetDecodingMode(SpeedEncoder::DecodingMode::B);
       Serial.println(F("OK mode=B (X2 on A)"));
     } else if (arg == "C") {
-      Enc.SetDecodingMode(SpeedEncoder::DecodingMode::C);
+      myEncoder.SetDecodingMode(SpeedEncoder::DecodingMode::C);
       Serial.println(F("OK mode=C (X4 on A+B)"));
     } else {
       Serial.println(F("ERR mode must be A|B|C"));
@@ -68,14 +68,14 @@ void handle_command(const String& cmd_in) {
 
   if (op == "CPR") {
     float v = arg.toFloat();
-    if (v > 0.0f) { Enc.SetCPR(v); Serial.print(F("OK CPR=")); Serial.println(v, 3); }
+    if (v > 0.0f) { myEncoder.SetCPR(v); Serial.print(F("OK CPR=")); Serial.println(v, 3); }
     else Serial.println(F("ERR CPR must be > 0"));
     return;
   }
 
   if (op == "FS") {
     float hz = arg.toFloat();
-    if (hz > 0.0f) { Enc.SetFs(hz); Serial.print(F("OK Fs=")); Serial.println(hz, 2); }
+    if (hz > 0.0f) { myEncoder.SetFs(hz); Serial.print(F("OK Fs=")); Serial.println(hz, 2); }
     else Serial.println(F("ERR Fs must be > 0"));
     return;
   }
@@ -86,7 +86,7 @@ void handle_command(const String& cmd_in) {
     if (sp < 0) { Serial.println(F("ERR usage: pins <A> <B>")); return; }
     int a = arg.substring(0, sp).toInt();
     int b = arg.substring(sp + 1).toInt();
-    Enc.SetPins((uint8_t)a, (uint8_t)b);
+    myEncoder.SetPins((uint8_t)a, (uint8_t)b);
     Serial.print(F("OK pins A=")); Serial.print(a);
     Serial.print(F(" B="));        Serial.println(b);
     return;
@@ -95,37 +95,37 @@ void handle_command(const String& cmd_in) {
   if (op == "RESET") {
     arg.trim();
     float deg = (arg.length() > 0) ? arg.toFloat() : 0.0f;
-    Enc.ResetPosition(deg);
+    myEncoder.ResetPosition(deg);
     Serial.print(F("OK position reset to ")); Serial.print(deg, 3); Serial.println(F(" deg"));
     return;
   }
 
   if (op == "POS") {
-    Serial.print(F("pos(deg)=")); Serial.println(Enc.Position(), 3);
+    Serial.print(F("pos(deg)=")); Serial.println(myEncoder.Position(), 3);
     return;
   }
 
   if (op == "SPEED") {
-    Serial.print(F("speed(RPM)=")); Serial.println(Enc.Speed(), 2);
+    Serial.print(F("speed(RPM)=")); Serial.println(myEncoder.Speed(), 2);
     return;
   }
 
   if (op == "STATUS") {
     // these getters should exist in your class (as we added):
     Serial.print(F("mode="));
-    switch (Enc.Mode()) {
+    switch (myEncoder.Mode()) {
       case SpeedEncoder::DecodingMode::A: Serial.print("A"); break;
       case SpeedEncoder::DecodingMode::B: Serial.print("B"); break;
       case SpeedEncoder::DecodingMode::C: Serial.print("C"); break;
     }
-    Serial.print(F("  CPR="));   Serial.print(Enc.CPR(), 3);
-    Serial.print(F("  Fs="));    Serial.print(Enc.Fs(), 2);
-    Serial.print(F("  PinA="));  Serial.print(Enc.PinA());
-    Serial.print(F("  PinB="));  Serial.print(Enc.PinB());
-    Serial.print(F("  ISR_A=")); Serial.print(Enc.ISR_A_Status() ? "yes" : "no");
-    Serial.print(F("  ISR_B=")); Serial.print(Enc.ISR_B_Status() ? "yes" : "no");
-    Serial.print(F("  pos(deg)=")); Serial.print(Enc.Position(), 3);
-    Serial.print(F("  speed(RPM)=")); Serial.println(Enc.Speed(), 2);
+    Serial.print(F("  CPR="));   Serial.print(myEncoder.CPR(), 3);
+    Serial.print(F("  Fs="));    Serial.print(myEncoder.Fs(), 2);
+    Serial.print(F("  PinA="));  Serial.print(myEncoder.PinA());
+    Serial.print(F("  PinB="));  Serial.print(myEncoder.PinB());
+    Serial.print(F("  ISR_A=")); Serial.print(myEncoder.ISR_A_Status() ? "yes" : "no");
+    Serial.print(F("  ISR_B=")); Serial.print(myEncoder.ISR_B_Status() ? "yes" : "no");
+    Serial.print(F("  pos(deg)=")); Serial.print(myEncoder.Position(), 3);
+    Serial.print(F("  speed(RPM)=")); Serial.println(myEncoder.Speed(), 2);
     return;
   }
 
