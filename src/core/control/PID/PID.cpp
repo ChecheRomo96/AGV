@@ -19,17 +19,19 @@ namespace AGV_Core
            _Kp = Kp; 
            SetCoefficients();
         }
+
         void PID::SetKi(float Ki) noexcept
         {
-           _Ki = Ki; 
-           SetCoefficients();
+            _Ki = Ki;  // continuo
+            SetCoefficients();
         }
 
         void PID::SetKd(float Kd) noexcept
         {
-            _Kd = Kd; 
-            SetCoefficients(); 
+            _Kd = Kd;  // continuo
+            SetCoefficients();
         }
+
 
         void PID::SetTs(float Ts) noexcept
         {
@@ -56,40 +58,53 @@ namespace AGV_Core
         }
 
         void PID::CalculateBeta() noexcept {
-            float Wd = 2.0f * 3.141592653f * _Fd;
-            _Beta = Wd / tanf((Wd * _Ts) / 2.0f);
+            if (_Fd <= 0 || _Ts <= 0) {
+                _Beta = 0.0f;
+                return;
+            }
+            float wd = 2.0f * 3.141592653f * _Fd;
+            _Beta = wd / tanf(wd * _Ts * 0.5f);
         }
 
         void PID::SetCoefficients() noexcept
         {
-            float Tf = 1.0f / (2.0f * 3.141592653f * _Fc);       // filtro derivativo
+            if (_Ts <= 0) return;
+
             float Ts = _Ts;
-            float alpha = Tf * _Beta;                            // termino del filtro
 
-            // --- PID continuo expresado en forma discreta ---
+            // Kp, Ki, Kd en continuo
             float Kp = _Kp;
-            float Ki = _Ki;
-            float Kd = _Kd;
+            float Ki = _Ki;      // continuo
+            float Kd = _Kd;      // continuo
 
-            // --- Polinomios (obtención estándar del PID filtrado discretizado) ---
-            float A0 = (4.0f * Tf + 2.0f * Ts);
-            float A1 = (2.0f * Ts - 4.0f * Tf);
-            float A2 = -(2.0f * Ts + 4.0f * Tf);
+            // filtro del derivativo
+            float Tf = 1.0f / (2.0f * 3.141592653f * _Fc);
 
-            float B0 = (2.0f * Kp * Ts + Ki * Ts * Ts + 4.0f * Kd);
-            float B1 = (2.0f * Ki * Ts * Ts - 8.0f * Kd);
-            float B2 = (2.0f * Kp * Ts + Ki * Ts * Ts - 4.0f * Kd);
+            float beta = _Beta;  // prewarp
+            float alpha = Tf * beta;
 
-            // --- Normalización por A0 ---
-            _b[0] = B0 / A0;
-            _b[1] = B1 / A0;
-            _b[2] = B2 / A0;
+            // limitar para estabilidad
+            if (alpha > 0.95f) alpha = 0.95f;
 
-            _a[0] = A1 / A0;
-            _a[1] = A2 / A0;
+            float denom = 1.0f + alpha;
+
+            // === a1, a2 ===
+            _a[0] = -2.0f * alpha / denom;        // a1
+            _a[1] = (alpha - 1.0f) / denom;       // a2
+
+            // === b0, b1, b2 ===
+            _b[0] = (Kp + Ki * Ts * 0.5f + Kd * beta) / denom;
+
+            _b[1] = (Ki * Ts - 2.0f * Kd * beta - 2.0f * Kp * alpha) / denom;
+
+            _b[2] = (Kd * beta + (Ki * Ts * 0.5f - Kp) * (1.0f - alpha)) / denom;
         }
 
 
+        void PID::Reset() {
+            for(int i=0;i<3;i++){ _x[i]=0; _y[i]=0; }
+            _x_index = _y_index = 0;
+        }
 
         float PID::FeedForward(float input)
         {
@@ -105,15 +120,6 @@ namespace AGV_Core
             _y_index = (_y_index + 1) % 3;
 
             return _y[(_y_index - 1 + 3) % 3];
-        }
-
-        void PID::Reset() noexcept {
-            for (int i = 0; i < 3; ++i) {
-                _x[i] = 0.0f;
-                _y[i] = 0.0f;
-            }
-            _x_index = 0;
-            _y_index = 0;
         }
 
     } // namespace Control
