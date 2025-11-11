@@ -21,13 +21,13 @@ namespace AGV_Core
         }
         void PID::SetKi(float Ki) noexcept
         {
-           _Ki = Ki * (_Ts / 2.0); 
+           _Ki = Ki; 
            SetCoefficients();
         }
 
         void PID::SetKd(float Kd) noexcept
         {
-            _Kd = Kd * _Beta; 
+            _Kd = Kd; 
             SetCoefficients(); 
         }
 
@@ -62,19 +62,33 @@ namespace AGV_Core
 
         void PID::SetCoefficients() noexcept
         {
-            // Filtro derivativo: Tf = 1 / (2π Fc)
-            float Tf = 1.0f / (2.0f * 3.141592653f * _Fc);
-            float alpha = Tf * _Beta;
+            float Tf = 1.0f / (2.0f * 3.141592653f * _Fc);       // filtro derivativo
+            float Ts = _Ts;
+            float alpha = Tf * _Beta;                            // termino del filtro
 
-            // --- Denominador normalizado ---
-            _a[0] = -(2.0f * alpha) / (1.0f + alpha);
-            _a[1] = (alpha - 1.0f) / (alpha + 1.0f);
+            // --- PID continuo expresado en forma discreta ---
+            float Kp = _Kp;
+            float Ki = _Ki;
+            float Kd = _Kd;
 
-            // --- Numerador ---
-            _b[0] = (_Kp + (_Ki * _Ts / 2.0f) + (_Kd * _Beta)) / (1.0f + alpha);
-            _b[1] = ((_Ki * _Ts) - (2.0f * _Kd * _Beta) - (2.0f * _Kp * alpha)) / (1.0f + alpha);
-            _b[2] = ((_Kd * _Beta) + ((_Ki * _Ts / 2.0f - _Kp) * (1.0f - alpha))) / (1.0f + alpha);
+            // --- Polinomios (obtención estándar del PID filtrado discretizado) ---
+            float A0 = (4.0f * Tf + 2.0f * Ts);
+            float A1 = (2.0f * Ts - 4.0f * Tf);
+            float A2 = -(2.0f * Ts + 4.0f * Tf);
+
+            float B0 = (2.0f * Kp * Ts + Ki * Ts * Ts + 4.0f * Kd);
+            float B1 = (2.0f * Ki * Ts * Ts - 8.0f * Kd);
+            float B2 = (2.0f * Kp * Ts + Ki * Ts * Ts - 4.0f * Kd);
+
+            // --- Normalización por A0 ---
+            _b[0] = B0 / A0;
+            _b[1] = B1 / A0;
+            _b[2] = B2 / A0;
+
+            _a[0] = A1 / A0;
+            _a[1] = A2 / A0;
         }
+
 
 
         float PID::FeedForward(float input)
