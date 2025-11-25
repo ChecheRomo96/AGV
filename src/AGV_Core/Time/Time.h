@@ -13,8 +13,9 @@
             uint32_t GetTimeUs() noexcept;
             uint32_t GetTimeMs() noexcept;
         }
-        
     }
+
+    #include "PeriodicTask/PeriodicTask.h"
 
 
 #endif//AGV_CORE_TIME_H

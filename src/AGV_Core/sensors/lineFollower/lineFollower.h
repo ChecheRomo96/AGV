@@ -1,7 +1,7 @@
 #ifndef AGV_SENSORS_LINE_FOLLOWER_H
 #define AGV_SENSORS_LINE_FOLLOWER_H
 
-#include <core/time/time.h>
+#include <AGV_Core/Time/Time.h>
 #include <stdint.h>
 
 namespace Utils::Sensors {
@@ -23,7 +23,6 @@ namespace Utils::Sensors {
         /* === Lecturas === */
         float GetSensorValue(uint8_t sensorIndex);
         float GetArrayValue();       // posición normalizada final
-        void ReadAllSensors();       // lee sensores del hardware y llena CurrentSensorsValues
 
         /* === Calibración Manual === */
         void SetWeights(const float* weightsArray);
@@ -53,6 +52,7 @@ namespace Utils::Sensors {
 
         /* === Funciones internas === */
         float GetNormalizedValue(uint8_t sensorIndex);
+        void ReadAllSensors();       // lee sensores del hardware y llena CurrentSensorsValues
 
         /* === Gestión de memoria === */
         void AllocateMemory(uint8_t numSensors);

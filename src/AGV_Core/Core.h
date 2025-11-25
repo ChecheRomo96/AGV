@@ -2,7 +2,7 @@
 #define AGV_CORE_H
 
 
-    #include "time/time.h"
+    #include "Time/Time.h"
     #include "sensors/sensors.h"
     #include "actuators/actuators.h"
     #include "control/control.h"
