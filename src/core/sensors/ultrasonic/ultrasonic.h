@@ -2,6 +2,7 @@
 #define AGV_UTILS_SENSORS_ULTRASONIC_H
     
 #include <stdint.h>
+#include <core/time/time.h>
 
 namespace Utils::Sensors {
 
@@ -15,6 +16,12 @@ namespace Utils::Sensors {
 
         enum DistanceUnits { m, cm, mm };
 
+        enum class UpdateStatus : uint8_t {
+            None = 0,        // No pasó nada (no hay nueva medición ni timeout)
+            NewMeasurement,  // Se recibió un eco válido
+            Timeout          // Pasó el tiempo sin recibir eco
+        };
+
         Ultrasonic() noexcept;
 
         Ultrasonic(SetupFn setup,
@@ -27,17 +34,23 @@ namespace Utils::Sensors {
                   ReadEchoFn readEcho,
                   WriteTrigFn writeTrigger) noexcept;
 
+        
+
         // Debe llamarse dentro de la ISR del pin ECHO (flancos RISING/FALLING o CHANGE)
         void OnISR() noexcept;
 
         // Se llama desde el loop. Regresa true cuando hay una medición nueva.
-        bool Update(uint32_t currentTimeTicks) noexcept;
+        UpdateStatus Update() noexcept;
+        UpdateStatus Update(uint32_t currentTimeTicks) noexcept;
+
 
         // Configuración de muestreo
         void SetFs(float fsHz) noexcept;     // Frecuencia en Hz
         void SetTs(float tsSec) noexcept;    // Periodo en segundos
 
         float GetDistance() const noexcept;
+        float GetLastValidDistance() const noexcept;
+        bool IsDistanceValid() const noexcept;
 
         inline void SetSpeedOfSound(float TempC = 20.0f, float RH = 0.0f) noexcept {
             _SpeedOfSound = 331.3f + (0.606f * TempC) + (0.0124f * RH);
@@ -83,11 +96,16 @@ namespace Utils::Sensors {
         DistanceUnits _DistanceUnits;
 
         // Última distancia medida
+        float _LastValidDistance;
         float _Distance;
         float _Offset;
 
         // Ticks por segundo
         float _TickFreq;
+
+        inline uint32_t Ultrasonic::Now() const noexcept {
+            return _GetTime ? _GetTime() : AGV_Core::Time::GetTimeUs();
+        }
     };
 
 } // namespace Utils::Sensors

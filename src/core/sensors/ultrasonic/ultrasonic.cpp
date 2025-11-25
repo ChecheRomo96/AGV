@@ -29,7 +29,8 @@ namespace Utils::Sensors {
           _DistanceUnits(cm),
           _Distance(0.0f),
           _Offset(0.0f),
-          _TickFreq(1000000.0f)  // por defecto ticks = us
+          _TickFreq(1000000.0f),  // por defecto ticks = us
+          _LastValidDistance(0.0f)
     {}
 
     void Ultrasonic::Init(SetupFn setup,
@@ -57,40 +58,47 @@ namespace Utils::Sensors {
 
     // ISR robusta: maneja bien flancos cortos
     void Ultrasonic::OnISR() noexcept {
-        if (!_ReadEcho || !_GetTime) {
+        if (!_ReadEcho) {
             return;
         }
 
-        const bool level      = _ReadEcho();
-        const uint32_t now    = _GetTime();
+        const bool level = _ReadEcho();
+        const uint32_t now = Now();
 
-        if (level) {
-            // Flanco de subida: inicio de eco
-            _EchoStart             = now;
-            _WaitingForFall        = true;
-            _EchoComplete          = false;
-            _MeasurementInProgress = true;
-        } else {
-            // Flanco de bajada: fin de eco (solo si estábamos esperando)
-            if (_WaitingForFall) {
-                _EchoEnd      = now;
-                _EchoComplete = true;
-                _WaitingForFall = false;
+        // Solo registrar flancos SI YA HUBO TRIG
+        if (_MeasurementInProgress) {
+
+            if (level) {
+                // Flanco de subida real
+                _EchoStart      = now;
+                _WaitingForFall = true;
+                _EchoComplete   = false;
+            }
+            else {
+                // Flanco de bajada real
+                if (_WaitingForFall) {
+                    _EchoEnd        = now;
+                    _EchoComplete   = true;
+                    _WaitingForFall = false;
+                }
             }
         }
     }
 
-    bool Ultrasonic::Update(uint32_t currentTimeTicks) noexcept {
-        if (!_GetTime || !_WriteTrigger) {
-            return false;
-        }
 
-        // (1) Disparar nueva medición SOLO si:
-        //     - No hay una en curso
-        //     - Ya pasó el periodo de muestreo
+    Ultrasonic::UpdateStatus Ultrasonic::Update() noexcept {
+        return Update(Now());
+    }
+
+    Ultrasonic::UpdateStatus Ultrasonic::Update(uint32_t currentTimeTicks) noexcept 
+    {
+        if (!_WriteTrigger)
+            return UpdateStatus::None;
+
+        // (1) Disparar nueva medición según Fs
         if (!_MeasurementInProgress &&
-            AGV_Core::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks) {
-
+            AGV_Core::Time::DeltaTicks(currentTimeTicks, _LastUpdateTime) >= _SamplingPeriodTicks)
+        {
             _LastUpdateTime        = currentTimeTicks;
 
             _EchoComplete          = false;
@@ -98,42 +106,51 @@ namespace Utils::Sensors {
             _MeasurementInProgress = true;
             _TrigTime              = currentTimeTicks;
 
-            // Pulso TRIG (bloqueante, pero la ISR sigue funcionando)
+            // TRIG pulse
             _WriteTrigger(true);
-            AGV_Core::Time::DelayTicks(_TriggerPulseTicks, _GetTime);
+            uint32_t (*tf)() = _GetTime ? _GetTime : AGV_Core::Time::GetTimeUs;
+            AGV_Core::Time::DelayTicks(_TriggerPulseTicks, tf);
             _WriteTrigger(false);
         }
 
-        // (2) Si hay medición en curso y ya se completó el eco
-        if (_MeasurementInProgress && _EchoComplete) {
-
+        // (2) Eco recibido
+        if (_MeasurementInProgress && _EchoComplete) 
+        {
             uint32_t durationTicks = AGV_Core::Time::DeltaTicks(_EchoEnd, _EchoStart);
             float durationSec      = static_cast<float>(durationTicks) / _TickFreq;
 
-            // Distancia en metros: v * t / 2 (ida y vuelta)
-            _Distance = (durationSec * _SpeedOfSound) / 2.0f;
+            // Distancia válida (en metros internos)
+            _Distance          = (durationSec * _SpeedOfSound) / 2.0f;
+            _LastValidDistance = _Distance;
 
             _EchoComplete          = false;
             _MeasurementInProgress = false;
             _WaitingForFall        = false;
 
-            return true;
+            return UpdateStatus::NewMeasurement;
         }
 
-        // (3) Timeout relativo al TRIG actual
-        if (_MeasurementInProgress && _TimeoutTicks > 0) {
+        // (3) Timeout
+        if (_MeasurementInProgress && _TimeoutTicks > 0) 
+        {
             uint32_t elapsed = AGV_Core::Time::DeltaTicks(currentTimeTicks, _TrigTime);
-            if (elapsed >= _TimeoutTicks) {
-                // No hubo eco válido dentro del tiempo esperado
+
+            if (elapsed >= _TimeoutTicks) 
+            {
                 _WaitingForFall        = false;
                 _EchoComplete          = false;
                 _MeasurementInProgress = false;
-                return false; // timeout sin medición
+                
+                // _Distance se marca como inválida, pero se mantiene _LastValidDistance
+                _Distance = -1.0f;
+
+                return UpdateStatus::Timeout;
             }
         }
 
-        return false;
+        return UpdateStatus::None;
     }
+
 
     // -------------------------------------------------------
     // Configuración
@@ -156,9 +173,17 @@ namespace Utils::Sensors {
     }
 
     float Ultrasonic::GetDistance() const noexcept {
-        // _Distance y _Offset se almacenan en metros internos
-        return (_Offset + _Distance) * _UnitScale;
+    return (_Offset + _Distance) * _UnitScale;  // Puede ser -1 si Timeout
+}
+
+    float Ultrasonic::GetLastValidDistance() const noexcept {
+        return (_Offset + _LastValidDistance) * _UnitScale;
     }
+
+    bool Ultrasonic::IsDistanceValid() const noexcept {
+        return _Distance >= 0.0f;
+    }
+
 
     void Ultrasonic::SetTimeoutTicks(uint32_t ticks) noexcept {
         _TimeoutTicks = ticks;

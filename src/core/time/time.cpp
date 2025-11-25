@@ -30,7 +30,7 @@ namespace AGV_Core::Time {
     uint32_t GetTimeUs() noexcept {
 
         #ifdef ARDUINO
-            return static_cast<uint32_t>(micros() * 1000); // Convert ms to us
+            return static_cast<uint32_t>(micros());
         #endif
 
         return 0; // Placeholder
@@ -39,7 +39,7 @@ namespace AGV_Core::Time {
     uint32_t GetTimeMs() noexcept {
 
         #ifdef ARDUINO
-            return static_cast<uint32_t>(millis() * 1000); // Convert ms to us
+            return static_cast<uint32_t>(millis());
         #endif
 
         return 0; // Placeholder
