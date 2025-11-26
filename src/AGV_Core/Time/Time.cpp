@@ -10,10 +10,10 @@
 
 namespace AGV_Core::Time {
 
-    uint32_t DeltaTicks(uint32_t currentTicks, uint32_t previousTicks) noexcept {
-        return (currentTicks >= previousTicks) ?
-               (currentTicks - previousTicks) :
-               (UINT32_MAX - previousTicks + currentTicks + 1);
+    uint32_t DeltaTicks(uint32_t t0, uint32_t t1) noexcept {
+        return (t1 >= t0) ?
+               (t1 - t0) :
+               (UINT32_MAX - t0 + t1 + 1);
     }
 
     void DelayTicks(uint32_t delayTicks, uint32_t (*getTimeFn)(void)) noexcept {

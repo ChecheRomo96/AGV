@@ -7,7 +7,7 @@
         // Aquí pueden ir otras utilidades generales
         namespace Time {
             
-            uint32_t DeltaTicks(uint32_t currentTicks, uint32_t previousTicks) noexcept;
+            uint32_t DeltaTicks(uint32_t t0, uint32_t t1) noexcept;
             void DelayTicks(uint32_t delayTicks, uint32_t (*getTimeFn)(void)) noexcept;
         
             uint32_t GetTimeUs() noexcept;

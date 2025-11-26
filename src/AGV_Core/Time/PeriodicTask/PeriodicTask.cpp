@@ -18,9 +18,7 @@ PeriodicTask::PeriodicTask()
    ============================================================ */
 
 void PeriodicTask::SetTickFrequency(float hz) noexcept {
-    if (hz > 0.0f) {
-        _TickFreq = hz;
-    }
+    if (hz > 0.0f) _TickFreq = hz;
 }
 
 float PeriodicTask::GetTickFrequency() const noexcept {
@@ -33,19 +31,34 @@ float PeriodicTask::GetTickPeriod() const noexcept {
 
 
 /* ============================================================
-   CONFIGURACIÓN DEL PERIODO
+   CONFIGURACIÓN DEL PERIODO DE MUESTREO
    ============================================================ */
-
 void PeriodicTask::SetFs(float fsHz) noexcept {
-    if (fsHz > 0.0f) {
+    if (fsHz > 0.0f)
         _SamplingPeriodTicks = static_cast<uint32_t>(_TickFreq / fsHz);
-    }
+}
+
+float PeriodicTask::GetFs() const noexcept {
+    if (_SamplingPeriodTicks == 0) return 0.0f;
+    return _TickFreq / float(_SamplingPeriodTicks);
 }
 
 void PeriodicTask::SetTs(float tsSec) noexcept {
-    if (tsSec > 0.0f) {
+    if (tsSec > 0.0f)
         _SamplingPeriodTicks = static_cast<uint32_t>(tsSec * _TickFreq);
-    }
+}
+
+float PeriodicTask::GetTs() const noexcept {
+    if (_SamplingPeriodTicks == 0) return 0.0f;
+    return float(_SamplingPeriodTicks) / _TickFreq;
+}
+
+void PeriodicTask::SetTsTicks(uint32_t Ticks) noexcept {
+    _SamplingPeriodTicks = Ticks;
+}
+
+uint32_t PeriodicTask::GetTsTicks() const noexcept {
+    return _SamplingPeriodTicks;
 }
 
 
@@ -91,11 +104,12 @@ uint32_t PeriodicTask::MicrosecondsToTicks(float us) const noexcept {
    ============================================================ */
 
 PeriodicTask::UpdateStatus PeriodicTask::Update(uint32_t nowTicks) noexcept {
+
     UpdateStatus sched = EvaluateUpdate(nowTicks);
 
-    if (sched == UpdateStatus::Update) {
+    if (sched == UpdateStatus::Update)
         OnUpdate(nowTicks);
-    }
+
     return sched;
 }
 
@@ -113,22 +127,41 @@ bool PeriodicTask::ShouldUpdate(uint32_t nowTicks) const noexcept {
 PeriodicTask::UpdateStatus
 PeriodicTask::EvaluateUpdate(uint32_t nowTicks) noexcept {
 
-    if (!ShouldUpdate(nowTicks)) {
-        return UpdateStatus::Idle;
+    // Modo continuo (sin periodo)
+    if (_SamplingPeriodTicks == 0) {
+        _LastUpdateTicks = nowTicks;
+        return UpdateStatus::Update;
     }
 
-    // -------- Manejo robusto de overflow --------
+    if (!ShouldUpdate(nowTicks))
+        return UpdateStatus::Idle;
+
     uint32_t dt = DeltaTicks(nowTicks, _LastUpdateTicks);
 
+    // Realineación robusta
     if (dt >= 2 * _SamplingPeriodTicks) {
-        // Saltó mucho tiempo → reajuste duro
-        _LastUpdateTicks = nowTicks;
+
+        uint32_t a = nowTicks % _SamplingPeriodTicks;
+        uint32_t b = _LastUpdateTicks % _SamplingPeriodTicks;
+
+        _LastUpdateTicks = nowTicks - a + b;
+
+        if (_LastUpdateTicks > nowTicks)
+            _LastUpdateTicks -= _SamplingPeriodTicks;
+
     } else {
-        // Incremento suave (evita drift)
         _LastUpdateTicks += _SamplingPeriodTicks;
     }
 
     return UpdateStatus::Update;
+}
+
+
+/* ============================================================
+   DEFAULT OnUpdate
+   ============================================================ */
+void PeriodicTask::OnUpdate(uint32_t) noexcept {
+    // no-op
 }
 
 } // namespace Time
