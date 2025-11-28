@@ -120,7 +120,7 @@ PeriodicTask::UpdateStatus PeriodicTask::Update(uint32_t nowTicks) noexcept {
 
 bool PeriodicTask::ShouldUpdate(uint32_t nowTicks) const noexcept {
     if (_SamplingPeriodTicks == 0) return true;
-    uint32_t dt = DeltaTicks(nowTicks, _LastUpdateTicks);
+    uint32_t dt = DeltaTicks(_LastUpdateTicks, nowTicks);
     return dt >= _SamplingPeriodTicks;
 }
 
