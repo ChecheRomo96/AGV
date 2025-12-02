@@ -101,7 +101,7 @@ namespace AGV_Core
         }
 
 
-        void PID::Reset() {
+        void PID::Reset() noexcept {
             for(int i=0;i<3;i++){ _x[i]=0; _y[i]=0; }
             _x_index = _y_index = 0;
         }
