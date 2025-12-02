@@ -26,7 +26,7 @@ namespace Sensors {
         return _isValid;
     }
 
-    ValueType SensorBase::GetType() const {
+    SensorBase::ValueType SensorBase::GetType() const {
         return _type;
     }
 

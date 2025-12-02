@@ -13,22 +13,21 @@ namespace Sensors {
         virtual ~SensorValueBase() {}
     };
 
-    // Tipo lógico del sensor (para clasificación opcional)
-    enum class ValueType : uint8_t {
-        GENERIC = 0,
-        ANALOG,
-        DIGITAL,
-        DISTANCE,
-        POSITION,
-        CUSTOM
-    };
-
     // ---------------------------------------------------------
     // Clase base para todos los sensores
     // ---------------------------------------------------------
     class SensorBase {
     public:
-        SensorBase(ValueType type = ValueType::GENERIC);
+        enum class ValueType : uint8_t {
+            Generic = 0,
+            Analog,
+            Digital,
+            Distance,
+            Position,
+            Custom
+        };
+
+        SensorBase(ValueType type = ValueType::Generic);
         virtual ~SensorBase();
 
         // Retorna el valor actual, debe castearse externamente

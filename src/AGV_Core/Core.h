@@ -3,8 +3,9 @@
 
     #include "Utils/Utils.h"
     #include "Time/Time.h"
-    #include "sensors/sensors.h"
-    #include "actuators/actuators.h"
+    #include "Sensors/Sensors.h"
+
+    #include "Actuators/Actuators.h"
     #include "control/control.h"
 
 #endif//AGV_CORE_H
