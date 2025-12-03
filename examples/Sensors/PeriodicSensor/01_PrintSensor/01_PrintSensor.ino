@@ -16,6 +16,8 @@ using namespace AGV_Core::Time;
 using namespace AGV_Core::Sensors;
 
 
+
+
 /* ============================================================
    PRINT SENSOR (custom class in this .ino)
    ============================================================ */
@@ -72,9 +74,12 @@ void setup() {
 
     Serial.println("=== PeriodicSensor Demo ===");
 
+    psA.SetTickFrequency(5e5);
+    
     // Configure sampling rates
     psA.SetFs(2.0f);   // 2 Hz = every 500 ms
     psB.SetFs(5.0f);   // 5 Hz = every 200 ms
+
 }
 
 
@@ -82,5 +87,5 @@ void loop() {
     uint32_t now = GetTimeUs();
 
     psA.Update(now);
-    psB.Update(now);
+    //psB.Update(now);
 }
