@@ -1,5 +1,5 @@
-#ifndef AGV_CORE_UTILS_FIR_TPP
-#define AGV_CORE_UTILS_FIR_TPP
+#ifndef AGV_CORE_DSP_FIR_TPP
+#define AGV_CORE_DSP_FIR_TPP
 
 namespace AGV_Core {
 namespace DSP {
@@ -66,4 +66,4 @@ T FIR<T>::Compute() noexcept {
 } // namespace Utils
 } // namespace AGV_Core
 
-#endif // AGV_CORE_UTILS_FIR_TPP
+#endif // AGV_CORE_DSP_FIR_TPP

@@ -1,5 +1,5 @@
-#ifndef AGV_CORE_UTILS_FIR_H
-#define AGV_CORE_UTILS_FIR_H
+#ifndef AGV_CORE_DSP_FIR_H
+#define AGV_CORE_DSP_FIR_H
 
 #include <stddef.h>
 #include "../../Utils/CircularBuffer/CircularBuffer.h"
@@ -30,4 +30,4 @@ private:
 
 #include "FIR.tpp"     // Importación obligatoria del template
 
-#endif // AGV_CORE_UTILS_FIR_H
+#endif // AGV_CORE_DSP_FIR_H
