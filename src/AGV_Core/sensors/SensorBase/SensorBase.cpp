@@ -3,52 +3,52 @@
 namespace AGV_Core {
 namespace Sensors {
 
-    SensorBase::SensorBase(ValueType type)
-        : _value(nullptr),
-          _isValid(false),
-          _lastUpdateTicks(0),
-          _samplingPeriodTicks(0),
-          _type(type)
-    {}
+SensorBase::SensorBase(ValueType type)
+    : _value(nullptr),
+      _isValid(false),
+      _status(SensorStatus::Idle),
+      _type(type)
+{
+}
 
-    SensorBase::~SensorBase() {
-        if (_value != nullptr) {
-            delete _value;
-            _value = nullptr;
-        }
-    }
+SensorBase::~SensorBase() {
+    if (_value)
+        delete _value;
+}
 
-    const SensorValueBase* SensorBase::GetValue() const {
-        return _value;
-    }
+const SensorValueBase* SensorBase::GetValue() const {
+    return _value;   // <- NO modifica el estado
+}
 
-    bool SensorBase::HasValidValue() const {
-        return _isValid;
-    }
+SensorBase::SensorStatus SensorBase::GetStatus() const {
+    return _status;  // <- NO modifica el estado
+}
 
-    SensorBase::ValueType SensorBase::GetType() const {
-        return _type;
-    }
+SensorBase::ValueType SensorBase::GetType() const {
+    return _type;
+}
 
-    void SensorBase::SetSamplingPeriod(uint32_t ticks) {
-        _samplingPeriodTicks = ticks;
-    }
+void SensorBase::ConsumeValue() {
+    if (_status == SensorStatus::NewMeasurement)
+        _status = SensorStatus::Idle;
+}
 
-    void SensorBase::_setValue(SensorValueBase* v) {
-        if (_value != nullptr) {
-            delete _value;
-        }
-        _value = v;
-        _isValid = true;
-    }
+void SensorBase::_setValue(SensorValueBase* v) {
+    if (_value)
+        delete _value;
 
-    bool SensorBase::_shouldSample(uint32_t currentTicks) const {
-        return (currentTicks - _lastUpdateTicks) >= _samplingPeriodTicks;
-    }
+    _value = v;
+    _isValid = true;
+    _status = SensorStatus::NewMeasurement;
+}
 
-    void SensorBase::_stamp(uint32_t ticks) {
-        _lastUpdateTicks = ticks;
-    }
+void SensorBase::_setStatus(SensorStatus s) {
+    _status = s;
+}
+
+void SensorBase::BackgroundUpdate() {
+    // Implementación por defecto: nada
+}
 
 } // namespace Sensors
 } // namespace AGV_Core

@@ -6,54 +6,68 @@
 namespace AGV_Core {
 namespace Sensors {
 
-    // ---------------------------------------------------------
-    // Base abstracta para todos los tipos de valores
-    // ---------------------------------------------------------
-    struct SensorValueBase {
-        virtual ~SensorValueBase() {}
+// =======================================================
+// Base polimórfica para valores de sensores
+// =======================================================
+struct SensorValueBase {
+    virtual ~SensorValueBase() {}
+};
+
+// =======================================================
+// Clase base de sensores
+// =======================================================
+class SensorBase {
+public:
+
+    // Tipo de sensor (opcional, informativo)
+    enum class ValueType : uint8_t {
+        Generic = 0,
+        Analog,
+        Digital,
+        Distance,
+        Position,
+        Custom
     };
 
-    // ---------------------------------------------------------
-    // Clase base para todos los sensores
-    // ---------------------------------------------------------
-    class SensorBase {
-    public:
-        enum class ValueType : uint8_t {
-            Generic = 0,
-            Analog,
-            Digital,
-            Distance,
-            Position,
-            Custom
-        };
-
-        SensorBase(ValueType type = ValueType::Generic);
-        virtual ~SensorBase();
-
-        // Retorna el valor actual, debe castearse externamente
-        const SensorValueBase* GetValue() const;
-        bool HasValidValue() const;
-        ValueType GetType() const;
-
-        // Método principal que el sensor debe implementar
-        virtual bool Update(uint32_t currentTicks) = 0;
-
-        // Control del periodo de muestreo
-        void SetSamplingPeriod(uint32_t ticks);
-
-    protected:
-        // Solo clases derivadas pueden establecer el valor
-        void _setValue(SensorValueBase* v);
-        bool _shouldSample(uint32_t currentTicks) const;
-        void _stamp(uint32_t ticks);
-
-    protected:
-        SensorValueBase* _value;  // Apuntador a struct derivado
-        bool             _isValid;
-        uint32_t         _lastUpdateTicks;
-        uint32_t         _samplingPeriodTicks;
-        ValueType        _type;
+    // Estado de la medición
+    enum class SensorStatus : uint8_t {
+        Idle = 0,
+        Busy,
+        NewMeasurement,
+        Timeout,
+        Error
     };
+
+    SensorBase(ValueType type = ValueType::Generic);
+    virtual ~SensorBase();
+
+    // ---------------------------------------------------------
+    // API principal
+    // ---------------------------------------------------------
+    const SensorValueBase* GetValue() const;   // NO consume medición
+    SensorStatus GetStatus() const;            // NO consume medición
+    ValueType GetType() const;
+
+    // Consumir explícitamente valor nuevo
+    void ConsumeValue();
+
+    // Iniciar medición (se llama desde PeriodicSensor)
+    virtual SensorStatus StartMeasurement() = 0;
+
+    // Lógica asincrónica opcional
+    virtual void BackgroundUpdate();
+
+protected:
+    // Herramientas para clases derivadas
+    void _setValue(SensorValueBase* v);     // Marca NewMeasurement
+    void _setStatus(SensorStatus s);
+
+protected:
+    SensorValueBase* _value;
+    bool             _isValid;
+    SensorStatus     _status;
+    ValueType        _type;
+};
 
 } // namespace Sensors
 } // namespace AGV_Core

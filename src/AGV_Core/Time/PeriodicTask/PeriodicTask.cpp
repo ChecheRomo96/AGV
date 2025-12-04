@@ -140,7 +140,7 @@ PeriodicTask::EvaluateUpdate(uint32_t nowTicks) noexcept {
     if (!ShouldUpdate(nowTicks))
         return UpdateStatus::Idle;
 
-    uint32_t dt = DeltaTicks(nowTicks, _LastUpdateTicks);
+    uint32_t dt = DeltaTicks(_LastUpdateTicks, nowTicks);
 
     // Realineación robusta
     if (dt >= 2 * _SamplingPeriodTicks) {
