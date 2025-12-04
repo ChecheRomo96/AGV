@@ -1,47 +1,85 @@
-#ifndef AVG_CORE_PID_H
-#define AVG_CORE_PID_H
+#ifndef AGV_CORE_CONTROL_PID_H
+#define AGV_CORE_CONTROL_PID_H
 
-    #include <stdint.h>
+#include <math.h>
 
-    namespace AGV_Core {
-        namespace Control {
-            
-            class PID{
-                public:
+namespace AGV_Core {
+namespace Control {
 
+template<typename T=float, typename U=float>
+class PID {
+public:
+    PID() noexcept;
 
-                void SetFc(float Fc) noexcept;
-                void SetKp(float Kp) noexcept;
-                void SetKi(float Ki) noexcept;
-                void SetKd(float Kd) noexcept;
-                void SetTs(float Ts) noexcept;
-                void SetFs(float Fs) noexcept;
-                void SetFd(float Fd) noexcept;
-                float FeedForward(float input);
+    // ---- CONFIGURACIÓN ----
+    void SetFs(T fs) noexcept;
+    void SetFc(T fc) noexcept;   // Filtro derivativo
+    void SetFd(T fd) noexcept;   // Prewarp para proporcional
 
-                private:
+    void SetKp(T kp) noexcept;
+    void SetKi(T ki) noexcept;
+    void SetKd(T kd) noexcept;
 
-                    float _Fc;  // Cutoff Frecuency
-                    float _Kp;  // Proportional Gain
-                    float _Ki;  // Integral Gain
-                    float _Kd;  // Derivitive Gain
-                    float _Ts;  // Sampling Period
-                    float _Fd;  // prewarp Frecuency 
-                    float _Beta; // Prewarp Adjust 
-                    uint8_t _x_index;
-                    uint8_t _y_index;
-                    float _a[3]{0,0,0};
-                    float _b[3]{0,0,0};
-                    float _x[3] = {0, 0, 0};
-                    float _y[3] = {0, 0, 0};
+    void SetInputScale(T s) noexcept;
+    void SetOutputScale(T s) noexcept;
 
-                    
-                    void CalculateBeta() noexcept;
-                    void SetCoefficients() noexcept;
-                    void Reset() noexcept;
-            };
-        }
-    }
+    void SetLimits(T minOut, T maxOut) noexcept;
+    void SetIntegralLimits(T minInt, T maxInt) noexcept;
+    void SetDerivativeLimits(T minD, T maxD) noexcept;
+    void SetProportionalLimits(T minP, T maxP) noexcept;
 
+    // ---- GETTERS ----
+    T GetFs() const noexcept { return _fs; }
+    T GetFc() const noexcept { return _fc; }
+    T GetFd() const noexcept { return _fd; }
 
-#endif//AVG_CORE_PID_H
+    T GetKp() const noexcept { return _kp; }
+    T GetKi() const noexcept { return _ki; }
+    T GetKd() const noexcept { return _kd; }
+
+    T GetInputScale() const noexcept { return _inputScale; }
+    T GetOutputScale() const noexcept { return _outputScale; }
+
+    // ---- OPERACIÓN ----
+    void Reset() noexcept;
+    T FeedForward(T error) noexcept;
+
+private:
+    void updateDerivativeFilter();
+    void updateIntegralFilter();
+
+private:
+    // Frecuencias
+    T _fs, _fc, _fd;
+
+    // Ganancias PID
+    T _kp, _ki, _kd;
+
+    // Escalas
+    T _inputScale;
+    T _outputScale;
+
+    // Estado interno
+    T _prevError;
+    T _intState;
+    T _derState;
+
+    // Coeficientes IIR derivativo
+    T ad, bd;
+
+    // Coeficientes integrador
+    T ai0, ai1, bi1;
+
+    // Límites
+    T _minOut, _maxOut;
+    T _minInt, _maxInt;
+    T _minD, _maxD;
+    T _minP, _maxP;
+};
+
+} // namespace Control
+} // namespace AGV_Core
+
+#include "PID.tpp"
+
+#endif
