@@ -31,6 +31,8 @@ namespace AGV_Core::Time {
 
         #ifdef ARDUINO
             return static_cast<uint32_t>(micros());
+        #elif PSOC_CREATOR
+            // Implementación específica para PSoC Creator
         #endif
 
         return 0; // Placeholder

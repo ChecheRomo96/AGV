@@ -18,7 +18,11 @@ PeriodicTask::PeriodicTask()
    ============================================================ */
 
 void PeriodicTask::SetTickFrequency(float hz) noexcept {
-    if (hz > 0.0f) _TickFreq = hz;
+    if (hz > 0.0f) {
+        float scale = _TickFreq / hz;
+        _SamplingPeriodTicks = (uint32_t)(_SamplingPeriodTicks * scale);
+        _TickFreq = hz;
+    }
 }
 
 float PeriodicTask::GetTickFrequency() const noexcept {
