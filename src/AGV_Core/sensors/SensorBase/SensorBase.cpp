@@ -28,9 +28,9 @@ SensorBase::ValueType SensorBase::GetType() const {
     return _type;
 }
 
-void SensorBase::ConsumeValue() {
-    if (_status == SensorStatus::NewMeasurement)
-        _status = SensorStatus::Idle;
+const SensorValueBase* SensorBase::ConsumeValue() {
+    _status = SensorStatus::Idle;
+    return _value;
 }
 
 void SensorBase::_setValue(SensorValueBase* v) {

@@ -49,7 +49,7 @@ public:
     ValueType GetType() const;
 
     // Consumir explícitamente valor nuevo
-    void ConsumeValue();
+    const SensorValueBase* ConsumeValue();
 
     // Iniciar medición (se llama desde PeriodicSensor)
     virtual SensorStatus StartMeasurement() = 0;
