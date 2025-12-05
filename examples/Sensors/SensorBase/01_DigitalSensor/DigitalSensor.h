@@ -10,12 +10,13 @@ namespace Sensors {
 class DigitalSensor : public SensorBase {
 public:
 
-    // ================================
-    // struct Value CORRECTAMENTE DEFINIDA
-    // ================================
     struct Value : public SensorValueBase {
         bool data;
-        Value(bool d) : data(d) {}
+
+        Value(bool d = false) : data(d) {}
+
+        void SetData(bool d) { data = d; }
+        bool GetData() const { return data; }
     };
 
     explicit DigitalSensor(uint8_t pin);
@@ -24,6 +25,7 @@ public:
 
 private:
     uint8_t _pin;
+    Value _SensorData;
 };
 
 } // namespace Sensors

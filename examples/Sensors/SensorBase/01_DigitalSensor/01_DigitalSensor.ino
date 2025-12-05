@@ -6,20 +6,20 @@ using namespace AGV_Core::Sensors;
 DigitalSensor button(2);
 
 void setup() {
-    Serial.begin(115200);
+  Serial.begin(115200);
 }
 
 void loop() {
 
-    button.StartMeasurement();
+  button.StartMeasurement();
 
-    if (button.GetStatus() == SensorBase::SensorStatus::NewMeasurement) {
+  if (button.GetStatus() == SensorBase::SensorStatus::NewMeasurement) {
 
-        auto* v = static_cast<const DigitalSensor::Value*>(button.GetValue());
+    auto* v = static_cast<const DigitalSensor::Value*>(button.GetValue());
 
-        Serial.print("Button = ");
-        Serial.println(v->data);
-    }
+    Serial.print("Button = ");
+    Serial.println(v->GetData());
+  }
 
-    delay(200);
+  delay(200);
 }

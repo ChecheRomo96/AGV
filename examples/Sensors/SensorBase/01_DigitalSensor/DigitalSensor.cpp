@@ -8,15 +8,28 @@ DigitalSensor::DigitalSensor(uint8_t pin)
       _pin(pin)
 {
     pinMode(_pin, INPUT);
+
+    // Inicializa el valor base del sensor
+    _valueBase = &_SensorData;
+
+    _status  = SensorStatus::Idle;
+    _isValid = false;
 }
 
-SensorBase::SensorStatus DigitalSensor::StartMeasurement() {
+SensorBase::SensorStatus DigitalSensor::StartMeasurement()
+{
     bool raw = digitalRead(_pin);
 
-    // Ahora Value hereda correctamente de SensorValueBase
-    _setValue(new Value(raw));
+    _SensorData.SetData(raw);
 
-    return SensorStatus::NewMeasurement;
+    // Actualiza puntero
+    _valueBase = &_SensorData;
+
+    // Actualiza estado del sensor
+    _status  = SensorStatus::NewMeasurement;
+    _isValid = true;
+
+    return _status;
 }
 
 } // namespace Sensors

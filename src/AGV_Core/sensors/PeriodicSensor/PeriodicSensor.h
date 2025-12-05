@@ -1,6 +1,6 @@
 #ifndef AGV_CORE_SENSORS_PERIODIC_SENSOR_H
 #define AGV_CORE_SENSORS_PERIODIC_SENSOR_H
-/*
+
 #include "../../Time/PeriodicTask/PeriodicTask.h"
 #include "../SensorBase/SensorBase.h"
 
@@ -28,5 +28,5 @@ private:
 
 } // namespace Sensors
 } // namespace AGV_Core
-*/
+
 #endif // AGV_CORE_SENSORS_PERIODIC_SENSOR_H

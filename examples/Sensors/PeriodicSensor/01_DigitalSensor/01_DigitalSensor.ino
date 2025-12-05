@@ -101,9 +101,10 @@ void loop() {
     auto* v = static_cast<const DigitalSensor::Value*>(button.GetValue());
 
     Serial.print("Nueva medición → Button state = ");
-    Serial.println(v->data);
+    Serial.println(v->GetData());
 
     // Consumimos explícitamente el valor
     button.ConsumeValue();
+    button.ClearMeasurement();
   }
 }

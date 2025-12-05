@@ -1,27 +1,36 @@
-#include "PeriodicSensor.h"
-/*
+#include "DigitalSensor.h"
+
 namespace AGV_Core {
 namespace Sensors {
 
-PeriodicSensor::PeriodicSensor(SensorBase* sensor)
-    : _sensor(sensor)
+DigitalSensor::DigitalSensor(uint8_t pin)
+    : SensorBase(ValueType::Digital),
+      _pin(pin)
 {
+    pinMode(_pin, INPUT);
+
+    // Inicializa el valor base del sensor
+    _valueBase = &_SensorData;
+
+    _status  = SensorStatus::Idle;
+    _isValid = false;
 }
 
-SensorBase* PeriodicSensor::GetSensor() const {
-    return _sensor;
-}
+SensorBase::SensorStatus DigitalSensor::StartMeasurement()
+{
+    bool raw = digitalRead(_pin);
 
-void PeriodicSensor::BackgroundUpdate() {
-    if (_sensor)
-        _sensor->BackgroundUpdate();
-}
+    _SensorData.SetData(raw);
 
-void PeriodicSensor::OnUpdate(uint32_t nowTicks) noexcept {
-    if (_sensor)
-        _sensor->StartMeasurement();
+    // Actualiza puntero
+    _valueBase = &_SensorData;
+
+    // Actualiza estado del sensor
+    _status  = SensorStatus::NewMeasurement;
+    _isValid = true;
+
+    return _status;
 }
 
 } // namespace Sensors
 } // namespace AGV_Core
-*/
