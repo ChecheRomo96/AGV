@@ -1,71 +1,75 @@
-#ifndef AGV_SENSORS_LINE_FOLLOWER_H
-#define AGV_SENSORS_LINE_FOLLOWER_H
+#include "lineFollower.h"
+#include <Arduino.h>
+#include <math.h>
 
-#include <AGV_Core/Time/Time.h>
-#include <stdint.h>
+namespace AGV_Core {
+namespace Sensors {
 
-namespace Utils::Sensors {
+LineFollower::LineFollower(uint8_t p0, uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4) {
+    _pins[0] = p0; _pins[1] = p1; _pins[2] = p2; _pins[3] = p3; _pins[4] = p4;
 
-    class LineFollower {
-    public:
+    _lastValue.position = 0.0f;
+    _lastValue.onLine = false;
 
-        /* === Tipos de funciones de callback === */
-        typedef uint16_t (*ReadInputFn)(uint8_t sensorIndex);
-        typedef void     (*WriteIRFn)(bool state);
+    for(int i=0;i<NumSensors;i++){
+        _lastValue.raw[i] = 0;
+        _minValues[i] = 0;
+        _maxValues[i] = 1023;
+    }
+}
 
-        /* === Constructor / Destructor === */
-        LineFollower();
-        ~LineFollower();
+void LineFollower::ReadAllSensors() {
+    for(uint8_t i=0; i<NumSensors; i++){
+        _lastValue.raw[i] = analogRead(_pins[i]);
+    }
+}
 
-        /* === Inicialización === */
-        void Init(ReadInputFn FnA, WriteIRFn FnB, uint8_t numSensors);
+void LineFollower::SetMins(const uint16_t* minsArray){
+    for(uint8_t i=0;i<NumSensors;i++)
+        _minValues[i] = minsArray[i];
+}
 
-        /* === Lecturas === */
-        float GetSensorValue(uint8_t sensorIndex);
-        float GetArrayValue();       // posición normalizada final
+void LineFollower::SetMaxs(const uint16_t* maxsArray){
+    for(uint8_t i=0;i<NumSensors;i++)
+        _maxValues[i] = maxsArray[i];
+}
 
-        /* === Calibración Manual === */
-        void SetWeights(const float* weightsArray);
-        void SetMins(const uint16_t* minsArray);
-        void SetMaxs(const uint16_t* maxsArray);
+float LineFollower::GetNormalizedValue(uint8_t index) const {
+    if(index >= NumSensors) return 0.0f;
 
-        /* === Calibración desde el hardware === */
-        void CalibrateWhite();       // mide blanco → llena MinSensorsValues
-        void CalibrateBlack();       // mide negro → llena MaxSensorsValues
+    int32_t val = _lastValue.raw[index];
+    int32_t minV = _minValues[index];
+    int32_t maxV = _maxValues[index];
 
-        /* === Getters de calibración === */
-        uint16_t GetMin(uint8_t sensorIndex) const;
-        uint16_t GetMax(uint8_t sensorIndex) const;
+    if(val <= minV) return 0.0f;
+    if(val >= maxV) return 1.0f;
 
-        const uint16_t* GetMins() const;
-        const uint16_t* GetMaxs() const;
+    return float(val);// - minV) / float(maxV - minV);
+}
 
-    private:
+SensorBase::SensorStatus LineFollower::StartMeasurement() {
+    ReadAllSensors();
 
-        /* === Buffers dinámicos === */
-        uint16_t* MinSensorsValues;
-        uint16_t* MaxSensorsValues;
-        uint16_t* CurrentSensorsValues;
-        float*    Weights;
+    float weights[NumSensors] = {-2.0f, -1.0f, 0.0f, 1.0f, 2.0f};
+    float weightedSum = 0.0f;
+    float totalWeight = 0.0f;
 
-        uint8_t NumSensors;
+    for(uint8_t i=0;i<NumSensors;i++){
+        float n = GetNormalizedValue(i);
+        weightedSum += n * weights[i];
+        totalWeight += fabs(weights[i]);
+    }
 
-        /* === Funciones internas === */
-        float GetNormalizedValue(uint8_t sensorIndex);
-        void ReadAllSensors();       // lee sensores del hardware y llena CurrentSensorsValues
+    _lastValue.position = (totalWeight != 0.0f) ? (weightedSum / totalWeight) : 0.0f;
+    _lastValue.onLine = (weightedSum != 0.0f);
 
-        /* === Gestión de memoria === */
-        void AllocateMemory(uint8_t numSensors);
-        void FreeMemory();
+    // Ahora funciona porque SensorValue hereda de SensorValueBase
+    _setValue(&_lastValue);
 
-        /* === Callbacks === */
-        ReadInputFn _ReadInputFn;
-        WriteIRFn   _WriteIRFn;
+    _status = SensorStatus::NewMeasurement;
 
-        /* === Dirección previa detectada === */
-        float _lastDirection;     // -1 izquierda, +1 derecha
-    };
+    return SensorStatus::NewMeasurement;
+}
 
-} // namespace Utils::Sensors
-
-#endif // AGV_SENSORS_LINE_FOLLOWER_H
+} // namespace Sensors
+} // namespace AGV_Core
