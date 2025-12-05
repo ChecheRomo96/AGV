@@ -70,7 +70,7 @@ void setup() {
 
   // Configurar PeriodicSensor
   pUS.SetTickFrequency(1e6);  // 1 tick = 1us
-  pUS.SetFs(5.0f);            // 5 Hz → medición cada 200ms
+  pUS.SetFs(10.0f);            // 5 Hz → medición cada 200ms
 
   Serial.println("=== Single Ultrasonic + PeriodicSensor ===");
 }
@@ -102,6 +102,16 @@ void loop() {
   if (US.GetStatus() == SensorBase::SensorStatus::Timeout) {
     // Útil para depuración
     // Serial.println("Timeout (sin eco recibido).");
+    
+    
+    float d = US.GetLastValidDistance();
+    //float d = US.GetDistance();
+
+    
+    Serial.print("Distancia = ");
+    Serial.print(d);
+    Serial.println(" cm");
+
     US.ConsumeValue();
     US.ClearMeasurement();
   }

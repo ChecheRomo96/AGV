@@ -3,6 +3,9 @@
 using namespace AGV_Core::Sensors;
 using namespace AGV_Core::Time;
 
+// ============================================================
+// Constructors
+// ============================================================
 Ultrasonic::Ultrasonic() noexcept
     : Ultrasonic(nullptr, nullptr, nullptr, nullptr)
 {}
@@ -27,6 +30,7 @@ Ultrasonic::Ultrasonic(SetupFn setup,
       _SpeedOfSound(343.0f),
       _Offset(0.0f)
 {
+    // SensorBase pointer to stored value
     _valueBase = &_Value;
 }
 
@@ -60,6 +64,7 @@ SensorBase::SensorStatus Ultrasonic::StartMeasurement()
 
     _TrigTime = Now();
 
+    // TRIG pulse
     _WriteTrigger(true);
     DelayTicks(_TriggerPulseTicks, _GetTime);
     _WriteTrigger(false);
@@ -75,18 +80,22 @@ SensorBase::SensorStatus Ultrasonic::StartMeasurement()
 // ============================================================
 void Ultrasonic::OnISR() noexcept
 {
-    if (!_MeasurementInProgress) return;
+    if (!_MeasurementInProgress)
+        return;
 
     bool level = _ReadEcho ? _ReadEcho() : false;
     uint32_t now = Now();
 
-    if (level) {
+    if (level)
+    {
         if (!_WaitingForFall) {
             _EchoStart = now;
             _WaitingForFall = true;
             _EchoComplete = false;
         }
-    } else {
+    }
+    else  // falling edge
+    {
         if (_WaitingForFall) {
             _EchoEnd = now;
             _EchoComplete = true;
@@ -105,14 +114,20 @@ SensorBase::SensorStatus Ultrasonic::BackgroundUpdate()
 
     uint32_t now = Now();
 
-    // ECO COMPLETO
+    // -------- NEW MEASUREMENT --------
     if (_EchoComplete)
     {
         uint32_t dtTicks = DeltaTicks(_EchoStart, _EchoEnd);
         float dtSec = float(dtTicks) / 1e6f;
 
         float dist = (dtSec * _SpeedOfSound * 0.5f) + _Offset;
+
+        // Store current
         _Value.SetDistance(dist);
+
+        // Store last valid reading
+        _LastValidValue.SetDistance(dist);
+        _LastValidValue.SetUnits(_Value.Units());
 
         _MeasurementInProgress = false;
         _EchoComplete = false;
@@ -121,10 +136,12 @@ SensorBase::SensorStatus Ultrasonic::BackgroundUpdate()
         return _status;
     }
 
-    // TIMEOUT
+    // -------- TIMEOUT --------
     if (DeltaTicks(_TrigTime, now) >= _TimeoutTicks)
     {
-        _Value.Invalidate();
+        _Value.Invalidate();          // current reading is invalid
+        // IMPORTANT: DO NOT invalidate _LastValidValue
+
         _MeasurementInProgress = false;
         _status = SensorStatus::Timeout;
         return _status;
@@ -143,7 +160,7 @@ float Ultrasonic::GetDistance() const noexcept
 
 float Ultrasonic::GetLastValidDistance() const noexcept
 {
-    return _Value.Distance(_Value.Units());
+    return _LastValidValue.Distance(_LastValidValue.Units());
 }
 
 bool Ultrasonic::IsDistanceValid() const noexcept
@@ -151,10 +168,20 @@ bool Ultrasonic::IsDistanceValid() const noexcept
     return _Value.IsValid();
 }
 
-void Ultrasonic::SetTimeoutTicks(uint32_t t) noexcept { _TimeoutTicks = t; }
-void Ultrasonic::SetTriggerPulseTicks(uint32_t t) noexcept { _TriggerPulseTicks = t; }
+// ============================================================
+// Configuración
+// ============================================================
+void Ultrasonic::SetTimeoutTicks(uint32_t t) noexcept {
+    _TimeoutTicks = t;
+}
+
+void Ultrasonic::SetTriggerPulseTicks(uint32_t t) noexcept {
+    _TriggerPulseTicks = t;
+}
 
 void Ultrasonic::SetDistanceUnits(DistanceUnits u) noexcept
 {
     _Value.SetUnits(u);
+    _LastValidValue.SetUnits(u);
 }
+// ============================================================

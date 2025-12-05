@@ -138,6 +138,8 @@ private:
 
     // Valor almacenado
     SensorValue _Value;
+    SensorValue _LastValidValue;
+
 
     // Offset en metros
     float _Offset;
