@@ -3,6 +3,6 @@
 
     #include "SensorBase/SensorBase.h"
     #include "PeriodicSensor/PeriodicSensor.h"
-    #include "ultrasonic/ultrasonic.h"
+    #include "Ultrasonic/Ultrasonic.h"
 
 #endif//AGV_UTILS_SENSORS_H

@@ -1,6 +1,6 @@
 #ifndef AGV_UTILS_SENSORS_ULTRASONIC_H
 #define AGV_UTILS_SENSORS_ULTRASONIC_H
-/*
+
 #include <stdint.h>
 #include "../SensorBase/SensorBase.h"
 #include <AGV_Core_Time.h>
@@ -9,34 +9,66 @@ namespace AGV_Core::Sensors {
 
 class Ultrasonic : public SensorBase {
 public:
+
     enum class DistanceUnits : uint8_t { m, cm, mm };
 
     // ==========================================================
-    // Valor del sensor — SIEMPRE almacenado en METROS
+    //  Valor del sensor — SIEMPRE almacenado en METROS
     // ==========================================================
     struct SensorValue : public SensorValueBase {
-        float distMeters;
-        bool  isValid;
-        DistanceUnits units;
-
+    public:
         SensorValue()
-            : distMeters(-1.0f), isValid(false) {}
+            : _distMeters(-1.0f), _isValid(false), _units(DistanceUnits::m) {}
 
-        bool IsValid() const {
-         if(dist_Meters >= 0.0f) return true;
-            return false;
-         }
+        // ----------- Validación -----------
+        bool IsValid() const noexcept { return _isValid; }
 
-        float Distance(DistanceUnits u) const {
-            if (!isValid) return -1.0f;
-            switch (u) {
-                case DistanceUnits::m:  return distMeters;
-                case DistanceUnits::cm: return distMeters * 100.0f;
-                case DistanceUnits::mm: return distMeters * 1000.0f;
-            }
-            return distMeters;
+        // ----------- Distancia base (m) -----------
+        float DistanceMeters() const noexcept {
+            return _isValid ? _distMeters : -1.0f;
         }
+
+        // ----------- Distancia según unidad configurada -----------
+        float Distance() const noexcept {
+            return Distance(_units);
+        }
+
+        float Distance(DistanceUnits u) const noexcept {
+            if (!_isValid) return -1.0f;
+
+            switch (u) {
+                case DistanceUnits::m:  return _distMeters;
+                case DistanceUnits::cm: return _distMeters * 100.0f;
+                case DistanceUnits::mm: return _distMeters * 1000.0f;
+            }
+            return _distMeters;
+        }
+
+        // ----------- Escritura -----------
+        void SetDistance(float meters) noexcept {
+            if (meters >= 0.0f) {
+                _distMeters = meters;
+                _isValid = true;
+            } else {
+                Invalidate();
+            }
+        }
+
+        void Invalidate() noexcept {
+            _distMeters = -1.0f;
+            _isValid = false;
+        }
+
+        // ----------- Unidades -----------
+        void SetUnits(DistanceUnits u) noexcept { _units = u; }
+        DistanceUnits Units() const noexcept { return _units; }
+
+    private:
+        float _distMeters;           // almacenado SIEMPRE en metros
+        bool  _isValid;
+        DistanceUnits _units;        // cómo reportar la distancia
     };
+
 
     using SetupFn     = void (*)(void);
     using GetTimeFn   = uint32_t (*)(void);
@@ -56,7 +88,7 @@ public:
 
     // SensorBase API
     SensorStatus StartMeasurement() override;
-    void         BackgroundUpdate() override;
+    SensorStatus BackgroundUpdate() override;
 
     // ISR
     void OnISR() noexcept;
@@ -70,7 +102,7 @@ public:
         _SpeedOfSound = 331.3f + 0.606f * TempC + 0.0124f * RH;
     }
 
-    inline void SetOffset(float dMeters) noexcept { _Offset = dMeters; }
+    inline void SetOffset(float meters) noexcept { _Offset = meters; }
 
     // Lectura
     float GetDistance() const noexcept;
@@ -83,13 +115,13 @@ private:
         return _GetTime ? _GetTime() : AGV_Core::Time::GetTimeUs();
     }
 
-    // Hardware
+    // Hardware callbacks
     SetupFn     _Setup;
     GetTimeFn   _GetTime;
     ReadEchoFn  _ReadEcho;
     WriteTrigFn _WriteTrigger;
 
-    // Estado del eco
+    // Estado eco
     volatile uint32_t _EchoStart;
     volatile uint32_t _EchoEnd;
     volatile bool     _EchoComplete;
@@ -103,7 +135,6 @@ private:
 
     // Física
     float _SpeedOfSound;
-    DistanceUnits _Units;
 
     // Valor almacenado
     SensorValue _Value;
@@ -113,5 +144,5 @@ private:
 };
 
 } // namespace AGV_Core::Sensors
-*/
+
 #endif

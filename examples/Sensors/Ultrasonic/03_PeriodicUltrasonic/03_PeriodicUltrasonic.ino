@@ -85,7 +85,7 @@ void loop() {
   pUS.BackgroundUpdate();
 
   if (s == PeriodicTask::UpdateStatus::Update) {
-    Serial.println("StartMeasurement triggered.");
+    //Serial.println("StartMeasurement triggered.");
   }
 
   if (US.GetStatus() == SensorBase::SensorStatus::NewMeasurement) {
@@ -96,11 +96,13 @@ void loop() {
     Serial.println(" cm");
 
     US.ConsumeValue();
+    US.ClearMeasurement();
   }
 
   if (US.GetStatus() == SensorBase::SensorStatus::Timeout) {
     // Útil para depuración
     // Serial.println("Timeout (sin eco recibido).");
     US.ConsumeValue();
+    US.ClearMeasurement();
   }
 }
