@@ -1,5 +1,5 @@
 #include "PeriodicSensor.h"
-
+/*
 namespace AGV_Core {
 namespace Sensors {
 
@@ -24,3 +24,4 @@ void PeriodicSensor::OnUpdate(uint32_t nowTicks) noexcept {
 
 } // namespace Sensors
 } // namespace AGV_Core
+*/

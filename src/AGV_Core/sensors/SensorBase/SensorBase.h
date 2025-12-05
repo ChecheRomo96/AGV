@@ -7,18 +7,14 @@ namespace AGV_Core {
 namespace Sensors {
 
 // =======================================================
-// Base polimórfica para valores de sensores
-// =======================================================
-struct SensorValueBase {
-    virtual ~SensorValueBase() {}
-};
-
-// =======================================================
 // Clase base de sensores
 // =======================================================
 class SensorBase {
 public:
 
+    struct SensorValueBase {
+        virtual ~SensorValueBase() {}
+    };
     // Tipo de sensor (opcional, informativo)
     enum class ValueType : uint8_t {
         Generic = 0,
@@ -55,12 +51,12 @@ public:
     virtual SensorStatus StartMeasurement() = 0;
 
     // Lógica asincrónica opcional
-    virtual void BackgroundUpdate();
+    virtual SensorStatus BackgroundUpdate();
 
-protected:
-    // Herramientas para clases derivadas
-    void _setValue(SensorValueBase* v);     // Marca NewMeasurement
-    void _setStatus(SensorStatus s);
+    void ClearMeasurement() noexcept {
+        _isValid = false;
+        _status  = SensorStatus::Idle;
+    }
 
 protected:
     SensorValueBase* _value;

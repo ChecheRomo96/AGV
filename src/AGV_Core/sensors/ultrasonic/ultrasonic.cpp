@@ -1,6 +1,5 @@
 #include "Ultrasonic.h"
-#include <Arduino.h>
-
+/*
 using namespace AGV_Core::Sensors;
 using namespace AGV_Core::Time;
 
@@ -34,6 +33,8 @@ Ultrasonic::Ultrasonic(SetupFn setup,
 
       _Distance(-1.0f),
       _LastValidDistance(0.0f),
+      
+      _value(&_Value),
 
       _Offset(0.0f)
 {}
@@ -115,10 +116,10 @@ void Ultrasonic::OnISR() noexcept
 // ============================================================
 // BackgroundUpdate — procesa eco completado o timeout
 // ============================================================
-void Ultrasonic::BackgroundUpdate()
+SensorStatus Ultrasonic::BackgroundUpdate()
 {
     if (!_MeasurementInProgress)
-        return;
+        return SensorStatus::Idle;
 
     uint32_t now = Now();
 
@@ -136,7 +137,7 @@ void Ultrasonic::BackgroundUpdate()
 
         _setValue(new Value(_Distance));
         _setStatus(SensorStatus::NewMeasurement);
-        return;
+        return SensorStatus::NewMeasurement;
     }
 
     // TIMEOUT
@@ -148,7 +149,7 @@ void Ultrasonic::BackgroundUpdate()
         _MeasurementInProgress = false;
         _EchoComplete          = false;
 
-        _setStatus(SensorStatus::Timeout);
+        return SensorStatus::Timeout;
     }
 }
 
@@ -157,12 +158,20 @@ void Ultrasonic::BackgroundUpdate()
 // ============================================================
 float Ultrasonic::GetDistance() const noexcept
 {
-    return (_Distance >= 0.0f) ? _Distance * _UnitScale : -1.0f;
+    return SensorValue.getDistance(_UnitScale);
 }
 
 float Ultrasonic::GetLastValidDistance() const noexcept
 {
-    return _LastValidDistance * _UnitScale;
+    float UnitScale = 1.0f;
+    
+    switch (_Value.Units()) {
+        case DistanceUnits::m:  UnitScale = 1.0f;    break;
+        case DistanceUnits::cm: UnitScale = 100.0f;  break;
+        case DistanceUnits::mm: UnitScale = 1000.0f; break;
+    }
+
+    return _Value.LastValidDistance() * UnitScale;
 }
 
 bool Ultrasonic::IsDistanceValid() const noexcept
@@ -184,3 +193,4 @@ void Ultrasonic::SetDistanceUnits(DistanceUnits u) noexcept
         case DistanceUnits::mm: _UnitScale = 1000.0f; break;
     }
 }
+*/

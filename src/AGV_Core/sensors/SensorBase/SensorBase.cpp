@@ -17,11 +17,11 @@ SensorBase::~SensorBase() {
 }
 
 const SensorValueBase* SensorBase::GetValue() const {
-    return _value;   // <- NO modifica el estado
+    return _value; 
 }
 
 SensorBase::SensorStatus SensorBase::GetStatus() const {
-    return _status;  // <- NO modifica el estado
+    return _status;
 }
 
 SensorBase::ValueType SensorBase::GetType() const {
@@ -29,24 +29,10 @@ SensorBase::ValueType SensorBase::GetType() const {
 }
 
 const SensorValueBase* SensorBase::ConsumeValue() {
-    _status = SensorStatus::Idle;
     return _value;
 }
 
-void SensorBase::_setValue(SensorValueBase* v) {
-    if (_value)
-        delete _value;
-
-    _value = v;
-    _isValid = true;
-    _status = SensorStatus::NewMeasurement;
-}
-
-void SensorBase::_setStatus(SensorStatus s) {
-    _status = s;
-}
-
-void SensorBase::BackgroundUpdate() {
+SensorBase::SensorStatus SensorBase::BackgroundUpdate(){
     // Implementación por defecto: nada
 }
 
