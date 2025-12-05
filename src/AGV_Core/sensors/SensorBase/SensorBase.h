@@ -53,13 +53,10 @@ public:
     // Lógica asincrónica opcional
     virtual SensorStatus BackgroundUpdate();
 
-    void ClearMeasurement() noexcept {
-        _isValid = false;
-        _status  = SensorStatus::Idle;
-    }
+    void ClearMeasurement() noexcept;
 
 protected:
-    SensorValueBase* _value;
+    SensorValueBase* _valueBase;
     bool             _isValid;
     SensorStatus     _status;
     ValueType        _type;

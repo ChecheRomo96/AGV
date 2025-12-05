@@ -4,20 +4,17 @@ namespace AGV_Core {
 namespace Sensors {
 
 SensorBase::SensorBase(ValueType type)
-    : _value(nullptr),
+    : _valueBase(nullptr),
       _isValid(false),
       _status(SensorStatus::Idle),
       _type(type)
 {
 }
 
-SensorBase::~SensorBase() {
-    if (_value)
-        delete _value;
-}
+SensorBase::~SensorBase() {}
 
-const SensorValueBase* SensorBase::GetValue() const {
-    return _value; 
+const SensorBase::SensorValueBase* SensorBase::GetValue() const {
+    return _valueBase; 
 }
 
 SensorBase::SensorStatus SensorBase::GetStatus() const {
@@ -28,8 +25,13 @@ SensorBase::ValueType SensorBase::GetType() const {
     return _type;
 }
 
-const SensorValueBase* SensorBase::ConsumeValue() {
-    return _value;
+const SensorBase::SensorValueBase* SensorBase::ConsumeValue() {
+    return _valueBase;
+}
+
+void SensorBase::ClearMeasurement() noexcept {
+    _isValid = false;
+    _status  = SensorStatus::Idle;
 }
 
 SensorBase::SensorStatus SensorBase::BackgroundUpdate(){
