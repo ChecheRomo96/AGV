@@ -1,141 +1,324 @@
-#ifndef AGV_CORE_SENSORS_MPU6050_H
-#define AGG_CORE_SENSORS_MPU6050_H
-
-#include <Wire.h>
-#include <stdint.h>
-#include "../SensorBase/SensorBase.h"
+#include "MPU6050.h"
+#include <math.h>
+#include <AGV_Core/Time/Time.h>
 
 namespace AGV_Core {
 namespace Sensors {
 
-class MPU6050 : public SensorBase {
-public:
+// ========================================
+// Constructor
+// ========================================
+MPU6050::MPU6050(uint8_t address)
+    : SensorBase(ValueType::Custom),
+      _addr(address)
+{
+    _valueBase = &_value;   // IMPORTANT: SensorBase apunta al valor concreto
+}
 
-    struct SensorValue : public SensorValueBase {
+void MPU6050::Init()
+{
+    Wire.begin();
+    _configureSensor();
+}
 
-        struct RawData {
-            float AccX, AccY, AccZ;     // m/s^2
-            float GyroX, GyroY, GyroZ;  // rad/s
-        };
+// ========================================
+// Escritura de registro
+// ========================================
+void MPU6050::_writeReg(uint8_t reg, uint8_t val)
+{
+    Wire.beginTransmission(_addr);
+    Wire.write(reg);
+    Wire.write(val);
+    Wire.endTransmission();
+}
 
-        struct ProcessedData {
-            float LinAccX, LinAccY, LinAccZ;  // aceleración sin gravedad
-            float LinVelX, LinVelY, LinVelZ;  // velocidad integrada
-            float AngAccX, AngAccY, AngAccZ;  // aceleración angular derivada
-            float Pitch, Roll, Yaw;           // orientación estimada
-        };
+// ========================================
+// Configuración inicial
+// ========================================
+void MPU6050::_configureSensor()
+{
+    // Wake up
+    _writeReg(0x6B, 0x00);
 
-        RawData raw{};
-        ProcessedData proc{};
+    // Gyro ±250°/s
+    SetGyroRange(GyroRange::DPS250);
 
-        void SetData(const RawData& r, const ProcessedData& p) {
-            raw = r;
-            proc = p;
-        }
+    // Acc ±2g
+    SetAccelRange(AccelRange::G2);
 
-        // ======================
-        //      RAW GETTERS
-        // ======================
-        float GetAccX() const { return raw.AccX; }
-        float GetAccY() const { return raw.AccY; }
-        float GetAccZ() const { return raw.AccZ; }
+    // Filtro digital
+    SetDLPF(DLPFConfig::BW_94);
 
-        float GetGyroVelX() const { return raw.GyroX; }
-        float GetGyroVelY() const { return raw.GyroY; }
-        float GetGyroVelZ() const { return raw.GyroZ; }
+    // Frecuencia de muestreo:
+    // SampleRate = GyroOutputRate / (1 + SMPLRT_DIV)
+    // GyroOutputRate = 8 kHz (cuando DLPF=0) o 1 kHz (DLPF>0)
+    SetSampleRate(9);   // → 100 Hz
+}
 
-        // ======================
-        //   PROCESSED GETTERS
-        // ======================
-        float GetLinAccX() const { return proc.LinAccX; }
-        float GetLinAccY() const { return proc.LinAccY; }
-        float GetLinAccZ() const { return proc.LinAccZ; }
+// ========================================
+// Configuración del rango del acelerómetro
+// ========================================
+void MPU6050::SetAccelRange(AccelRange range)
+{
+    _writeReg(0x1C, ((uint8_t)range << 3));
 
-        float GetLinVelX() const { return proc.LinVelX; }
-        float GetLinVelY() const { return proc.LinVelY; }
-        float GetLinVelZ() const { return proc.LinVelZ; }
+    switch (range) {
+        case AccelRange::G2:  _accScale = 9.80665f / 16384.0f; break;
+        case AccelRange::G4:  _accScale = 9.80665f /  8192.0f; break;
+        case AccelRange::G8:  _accScale = 9.80665f /  4096.0f; break;
+        case AccelRange::G16: _accScale = 9.80665f /  2048.0f; break;
+    }
+}
 
-        float GetAngAccX() const { return proc.AngAccX; }
-        float GetAngAccY() const { return proc.AngAccY; }
-        float GetAngAccZ() const { return proc.AngAccZ; }
+// ========================================
+// Configuración del rango del giroscopio
+// ========================================
+void MPU6050::SetGyroRange(GyroRange range)
+{
+    _writeReg(0x1B, ((uint8_t)range << 3));
 
-        float GetPitch() const { return proc.Pitch; }
-        float GetRoll()  const { return proc.Roll; }
-        float GetYaw()   const { return proc.Yaw; }
-    };
+    const float deg2rad = 3.1415926535f / 180.0f;
 
-    enum class AccelRange : uint8_t {
-        G2  = 0,
-        G4  = 1,
-        G8  = 2,
-        G16 = 3
-    };
+    switch (range) {
+        case GyroRange::DPS250:  _gyroScale = deg2rad / 131.0f; break;
+        case GyroRange::DPS500:  _gyroScale = deg2rad /  65.5f; break;
+        case GyroRange::DPS1000: _gyroScale = deg2rad /  32.8f; break;
+        case GyroRange::DPS2000: _gyroScale = deg2rad /  16.4f; break;
+    }
+}
 
-    enum class GyroRange : uint8_t {
-        DPS250  = 0,
-        DPS500  = 1,
-        DPS1000 = 2,
-        DPS2000 = 3
-    };
+// ========================================
+// Configuración del DLPF
+// ========================================
+void MPU6050::SetDLPF(DLPFConfig cfg)
+{
+    _writeReg(0x1A, (uint8_t)cfg);
+}
 
-    enum class DLPFConfig : uint8_t {
-        BW_260 = 0,
-        BW_184 = 1,
-        BW_94  = 2,
-        BW_44  = 3,
-        BW_21  = 4,
-        BW_10  = 5,
-        BW_5   = 6
-    };
+// ========================================
+// Configuración del divisor de muestreo
+// ========================================
+void MPU6050::SetSampleRate(uint8_t divider)
+{
+    _writeReg(0x19, divider);
+}
 
-    MPU6050(uint8_t address = 0x68);
+// ========================================
+// Calibración (obtención de bias)
+// ========================================
+void MPU6050::Calibrate(uint16_t samples)
+{
+    long axSum = 0, aySum = 0, azSum = 0;
+    long gxSum = 0, gySum = 0, gzSum = 0;
 
-    // ============================
-    //      CALIBRACIÓN
-    // ============================
-    void Calibrate(uint16_t samples = 500);
+    // Estabilidad inicial
+    AGV_Core::Time::DelayTicks(200, AGV_Core::Time::GetTimeMs);
 
-    // Opcional: obtener offsets actuales
-    float GetAccelBiasX() const { return _accBiasX; }
-    float GetAccelBiasY() const { return _accBiasY; }
-    float GetAccelBiasZ() const { return _accBiasZ; }
+    for (uint16_t i = 0; i < samples; i++)
+    {
+        // Seleccionar bloque de medición
+        Wire.beginTransmission(_addr);
+        Wire.write(0x3B);
+        Wire.endTransmission(false);
 
-    float GetGyroBiasX() const { return _gyroBiasX; }
-    float GetGyroBiasY() const { return _gyroBiasY; }
-    float GetGyroBiasZ() const { return _gyroBiasZ; }
+        Wire.requestFrom(_addr, (uint8_t)14, (uint8_t)true);
 
-    // Configuración de rangos y filtros
-    void SetAccelRange(AccelRange range);
-    void SetGyroRange(GyroRange range);
-    void SetDLPF(DLPFConfig cfg);
-    void SetSampleRate(uint8_t divider);
+        int16_t ax = (Wire.read() << 8) | Wire.read();
+        int16_t ay = (Wire.read() << 8) | Wire.read();
+        int16_t az = (Wire.read() << 8) | Wire.read();
 
-    SensorStatus StartMeasurement() override;
+        Wire.read(); Wire.read(); // temperatura ignorada
 
-private:
+        int16_t gx = (Wire.read() << 8) | Wire.read();
+        int16_t gy = (Wire.read() << 8) | Wire.read();
+        int16_t gz = (Wire.read() << 8) | Wire.read();
 
-    uint8_t _addr;
+        axSum += ax;
+        aySum += ay;
+        azSum += az;
 
-    // Escalas de conversión (se configuran en SetAccelRange / SetGyroRange)
-    float _accScale = 9.80665f / 16384.0f;     // valor por defecto: ±2g
-    float _gyroScale = (3.1415926f / 180.0f) / 131.0f; // valor por defecto: ±250 °/s
+        gxSum += gx;
+        gySum += gy;
+        gzSum += gz;
 
-    // Bias de calibración
-    float _accBiasX = 0.0f;
-    float _accBiasY = 0.0f;
-    float _accBiasZ = 0.0f;
+        // Pequeña espera entre muestras
+        AGV_Core::Time::DelayTicks(3, AGV_Core::Time::GetTimeMs);
+    }
 
-    float _gyroBiasX = 0.0f;
-    float _gyroBiasY = 0.0f;
-    float _gyroBiasZ = 0.0f;
+    // Promedios escalados
+    float accX = (axSum / (float)samples) * _accScale;
+    float accY = (aySum / (float)samples) * _accScale;
+    float accZ = (azSum / (float)samples) * _accScale;
 
-    SensorValue _value;
+    float gyroX = (gxSum / (float)samples) * _gyroScale;
+    float gyroY = (gySum / (float)samples) * _gyroScale;
+    float gyroZ = (gzSum / (float)samples) * _gyroScale;
 
-    void _configureSensor();    // default init
-    void _writeReg(uint8_t reg, uint8_t val);
-};
+    // Guardar bias
+    _accBiasX = accX;
+    _accBiasY = accY;
+    _accBiasZ = accZ - 9.80665f;  // remover gravedad para un sensor quieto
+
+    _gyroBiasX = gyroX;
+    _gyroBiasY = gyroY;
+    _gyroBiasZ = gyroZ;
+}
+
+// ========================================
+// Lectura principal
+// ========================================
+SensorBase::SensorStatus MPU6050::StartMeasurement()
+{
+    // ================================
+    // SOLICITUD I2C
+    // ================================
+    Wire.beginTransmission(_addr);
+    Wire.write(0x3B);
+    Wire.endTransmission(false);
+
+    int count = Wire.requestFrom(_addr, (uint8_t)14, (uint8_t)true);
+    if (count < 14) {
+        _status = SensorStatus::Error;
+        return _status;
+    }
+
+    // -------------------------
+    // Lectura cruda
+    // -------------------------
+    int16_t ax = (Wire.read() << 8) | Wire.read();
+    int16_t ay = (Wire.read() << 8) | Wire.read();
+    int16_t az = (Wire.read() << 8) | Wire.read();
+
+    Wire.read(); Wire.read(); // temperatura
+
+    int16_t gx = (Wire.read() << 8) | Wire.read();
+    int16_t gy = (Wire.read() << 8) | Wire.read();
+    int16_t gz = (Wire.read() << 8) | Wire.read();
+
+    // ================================
+    // ESCALA + BIAS
+    // ================================
+    MPU6050::SensorValue::RawData raw;
+
+    raw.AccX = ax * _accScale - _accBiasX;
+    raw.AccY = ay * _accScale - _accBiasY;
+    raw.AccZ = az * _accScale - _accBiasZ;
+
+    raw.GyroX = gx * _gyroScale - _gyroBiasX;
+    raw.GyroY = gy * _gyroScale - _gyroBiasY;
+    raw.GyroZ = gz * _gyroScale - _gyroBiasZ;
+
+    // ================================
+    // TIEMPO: dt
+    // ================================
+    static uint32_t lastUs = 0;
+    uint32_t nowUs = AGV_Core::Time::GetTimeUs();
+
+    float dt = 0.01f;  // valor por defecto si es primera vez
+    if (lastUs != 0) {
+        uint32_t d = AGV_Core::Time::DeltaTicks(lastUs, nowUs);
+        dt = d / 1e6f;
+    }
+    lastUs = nowUs;
+
+    // ================================
+    // ORIENTACIÓN: Pitch, Roll, Yaw
+    // Filtro complementario
+    // ================================
+    static float pitch = 0, roll = 0, yaw = 0;
+
+    // Acelerómetro → ángulos
+    float pitchAcc = atan2(-raw.AccX, sqrt(raw.AccY*raw.AccY + raw.AccZ*raw.AccZ));
+    float rollAcc  = atan2(raw.AccY, raw.AccZ);
+
+    const float alpha = 0.98f;
+
+    // Fusión gyro + acc
+    pitch = alpha * (pitch + raw.GyroY * dt) + (1.0f - alpha) * pitchAcc;
+    roll  = alpha * (roll  + raw.GyroX * dt) + (1.0f - alpha) * rollAcc;
+    yaw  += raw.GyroZ * dt;  // sin corrección magnética
+
+    // ================================
+    // MATRIZ DE ROTACIÓN PARA REMOVER GRAVEDAD
+    // ================================
+    float cp = cos(pitch), sp = sin(pitch);
+    float cr = cos(roll),  sr = sin(roll);
+    float cy = cos(yaw),   sy = sin(yaw);
+
+    // Matriz de rotación global a cuerpo (R^T)
+    float R11 = cy*cp;
+    float R12 = cy*sp*sr - sy*cr;
+    float R13 = cy*sp*cr + sy*sr;
+
+    float R21 = sy*cp;
+    float R22 = sy*sp*sr + cy*cr;
+    float R23 = sy*sp*cr - cy*sr;
+
+    float R31 = -sp;
+    float R32 = cp*sr;
+    float R33 = cp*cr;
+
+    // Transformar aceleración al marco global
+    float accGX = R11*raw.AccX + R12*raw.AccY + R13*raw.AccZ;
+    float accGY = R21*raw.AccX + R22*raw.AccY + R23*raw.AccZ;
+    float accGZ = R31*raw.AccX + R32*raw.AccY + R33*raw.AccZ;
+
+    // Remover gravedad
+    float linX = accGX;
+    float linY = accGY;
+    float linZ = accGZ - 9.80665f;
+
+    // ================================
+    // ACELERACIÓN ANGULAR
+    // ================================
+    static float prevGX = 0, prevGY = 0, prevGZ = 0;
+
+    float angAccX = (raw.GyroX - prevGX) / dt;
+    float angAccY = (raw.GyroY - prevGY) / dt;
+    float angAccZ = (raw.GyroZ - prevGZ) / dt;
+
+    prevGX = raw.GyroX;
+    prevGY = raw.GyroY;
+    prevGZ = raw.GyroZ;
+
+    // ================================
+    // VELOCIDAD INTEGRADA
+    // ================================
+    static float velX = 0, velY = 0, velZ = 0;
+
+    velX += linX * dt;
+    velY += linY * dt;
+    velZ += linZ * dt;
+
+    // ================================
+    // GUARDAR EN PROCESADO
+    // ================================
+    MPU6050::SensorValue::ProcessedData proc;
+
+    proc.LinAccX = linX;
+    proc.LinAccY = linY;
+    proc.LinAccZ = linZ;
+
+    proc.LinVelX = velX;
+    proc.LinVelY = velY;
+    proc.LinVelZ = velZ;
+
+    proc.AngAccX = angAccX;
+    proc.AngAccY = angAccY;
+    proc.AngAccZ = angAccZ;
+
+    proc.Pitch = pitch;
+    proc.Roll  = roll;
+    proc.Yaw   = yaw;
+
+    // ================================
+    // Asignar al Value
+    // ================================
+    _value.SetData(raw, proc);
+    _status = SensorStatus::NewMeasurement;
+
+    return _status;
+}
 
 } // namespace Sensors
 } // namespace AGV_Core
-
-#endif

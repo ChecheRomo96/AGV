@@ -1,6 +1,6 @@
 #include "LineFollower.h"
 #include <math.h>
-
+/*
 namespace AGV_Core {
 namespace Sensors {
 
@@ -72,3 +72,4 @@ SensorBase::SensorStatus LineFollower::StartMeasurement() {
 
 } // namespace Sensors
 } // namespace AGV_Core
+*/

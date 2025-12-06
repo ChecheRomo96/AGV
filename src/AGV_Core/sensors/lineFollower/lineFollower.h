@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "../SensorBase/SensorBase.h"
 
+/*
 namespace AGV_Core {
 namespace Sensors {
 
@@ -40,5 +41,5 @@ private:
 
 } // namespace Sensors
 } // namespace AGV_Core
-
+*/
 #endif // AGV_CORE_SENSORS_LINEFOLLOWER_H
