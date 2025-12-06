@@ -1,64 +1,141 @@
-#include "MPU6050.h"
+#ifndef AGV_CORE_SENSORS_MPU6050_H
+#define AGG_CORE_SENSORS_MPU6050_H
+
+#include <Wire.h>
+#include <stdint.h>
+#include "../SensorBase/SensorBase.h"
 
 namespace AGV_Core {
 namespace Sensors {
 
-MPU6050::MPU6050(uint8_t address)
-    : SensorBase(ValueType::Custom),
-      _addr(address),
-      _requested(false)
-{
-}
+class MPU6050 : public SensorBase {
+public:
 
-SensorBase::SensorStatus MPU6050::StartMeasurement() {
-    _requestRaw();
-    _setStatus(SensorStatus::Busy);
-    return SensorStatus::Busy;
-}
+    struct SensorValue : public SensorValueBase {
 
-void MPU6050::_requestRaw() {
-    Wire.beginTransmission(_addr);
-    Wire.write(0x3B);
-    Wire.endTransmission(false);
+        struct RawData {
+            float AccX, AccY, AccZ;     // m/s^2
+            float GyroX, GyroY, GyroZ;  // rad/s
+        };
 
-    _requested = true;
-}
+        struct ProcessedData {
+            float LinAccX, LinAccY, LinAccZ;  // aceleración sin gravedad
+            float LinVelX, LinVelY, LinVelZ;  // velocidad integrada
+            float AngAccX, AngAccY, AngAccZ;  // aceleración angular derivada
+            float Pitch, Roll, Yaw;           // orientación estimada
+        };
 
-void MPU6050::_readRaw() {
-    if (Wire.requestFrom(_addr, (uint8_t)14, (uint8_t)true) != 14) {
-        _setStatus(SensorStatus::Error);
-        return;
-    }
+        RawData raw{};
+        ProcessedData proc{};
 
-    _ax = (Wire.read() << 8) | Wire.read();
-    _ay = (Wire.read() << 8) | Wire.read();
-    _az = (Wire.read() << 8) | Wire.read();
+        void SetData(const RawData& r, const ProcessedData& p) {
+            raw = r;
+            proc = p;
+        }
 
-    Wire.read(); Wire.read();
+        // ======================
+        //      RAW GETTERS
+        // ======================
+        float GetAccX() const { return raw.AccX; }
+        float GetAccY() const { return raw.AccY; }
+        float GetAccZ() const { return raw.AccZ; }
 
-    _gx = (Wire.read() << 8) | Wire.read();
-    _gy = (Wire.read() << 8) | Wire.read();
-    _gz = (Wire.read() << 8) | Wire.read();
+        float GetGyroVelX() const { return raw.GyroX; }
+        float GetGyroVelY() const { return raw.GyroY; }
+        float GetGyroVelZ() const { return raw.GyroZ; }
 
-    MPU6050Value* val = new MPU6050Value();
-    val->ax = _ax;
-    val->ay = _ay;
-    val->az = _az;
-    val->gx = _gx;
-    val->gy = _gy;
-    val->gz = _gz;
+        // ======================
+        //   PROCESSED GETTERS
+        // ======================
+        float GetLinAccX() const { return proc.LinAccX; }
+        float GetLinAccY() const { return proc.LinAccY; }
+        float GetLinAccZ() const { return proc.LinAccZ; }
 
-    _setValue(val);
-    _setStatus(SensorStatus::NewMeasurement);
-}
+        float GetLinVelX() const { return proc.LinVelX; }
+        float GetLinVelY() const { return proc.LinVelY; }
+        float GetLinVelZ() const { return proc.LinVelZ; }
 
-void MPU6050::BackgroundUpdate() {
-    if (!_requested)
-        return;
+        float GetAngAccX() const { return proc.AngAccX; }
+        float GetAngAccY() const { return proc.AngAccY; }
+        float GetAngAccZ() const { return proc.AngAccZ; }
 
-    _requested = false;
-    _readRaw();
-}
+        float GetPitch() const { return proc.Pitch; }
+        float GetRoll()  const { return proc.Roll; }
+        float GetYaw()   const { return proc.Yaw; }
+    };
+
+    enum class AccelRange : uint8_t {
+        G2  = 0,
+        G4  = 1,
+        G8  = 2,
+        G16 = 3
+    };
+
+    enum class GyroRange : uint8_t {
+        DPS250  = 0,
+        DPS500  = 1,
+        DPS1000 = 2,
+        DPS2000 = 3
+    };
+
+    enum class DLPFConfig : uint8_t {
+        BW_260 = 0,
+        BW_184 = 1,
+        BW_94  = 2,
+        BW_44  = 3,
+        BW_21  = 4,
+        BW_10  = 5,
+        BW_5   = 6
+    };
+
+    MPU6050(uint8_t address = 0x68);
+
+    // ============================
+    //      CALIBRACIÓN
+    // ============================
+    void Calibrate(uint16_t samples = 500);
+
+    // Opcional: obtener offsets actuales
+    float GetAccelBiasX() const { return _accBiasX; }
+    float GetAccelBiasY() const { return _accBiasY; }
+    float GetAccelBiasZ() const { return _accBiasZ; }
+
+    float GetGyroBiasX() const { return _gyroBiasX; }
+    float GetGyroBiasY() const { return _gyroBiasY; }
+    float GetGyroBiasZ() const { return _gyroBiasZ; }
+
+    // Configuración de rangos y filtros
+    void SetAccelRange(AccelRange range);
+    void SetGyroRange(GyroRange range);
+    void SetDLPF(DLPFConfig cfg);
+    void SetSampleRate(uint8_t divider);
+
+    SensorStatus StartMeasurement() override;
+
+private:
+
+    uint8_t _addr;
+
+    // Escalas de conversión (se configuran en SetAccelRange / SetGyroRange)
+    float _accScale = 9.80665f / 16384.0f;     // valor por defecto: ±2g
+    float _gyroScale = (3.1415926f / 180.0f) / 131.0f; // valor por defecto: ±250 °/s
+
+    // Bias de calibración
+    float _accBiasX = 0.0f;
+    float _accBiasY = 0.0f;
+    float _accBiasZ = 0.0f;
+
+    float _gyroBiasX = 0.0f;
+    float _gyroBiasY = 0.0f;
+    float _gyroBiasZ = 0.0f;
+
+    SensorValue _value;
+
+    void _configureSensor();    // default init
+    void _writeReg(uint8_t reg, uint8_t val);
+};
 
 } // namespace Sensors
 } // namespace AGV_Core
+
+#endif
