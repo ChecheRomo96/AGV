@@ -175,7 +175,7 @@ T PID<T,U>::FeedForward(T error) noexcept {
     // -----------------------------
     // SALIDA TOTAL
     // -----------------------------
-    T out = (P + I + D) * _outputScale * 0.333333f;
+    T out = (P + I + D) * _outputScale;
 
     if (out > _maxOut) out = _maxOut;
     else if (out < _minOut) out = _minOut;
