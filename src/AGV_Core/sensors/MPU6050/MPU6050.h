@@ -1,5 +1,5 @@
-#ifndef AGV_CORE_SENSORS_MPU6050P_H
-#define AGV_CORE_SENSORS_MPU6050P_H
+#ifndef AGV_CORE_SENSORS_MPU6050_H
+#define AGV_CORE_SENSORS_MPU6050_H
 
 #include <Wire.h>
 #include "../SensorBase/SensorBase.h"
@@ -7,14 +7,14 @@
 namespace AGV_Core {
 namespace Sensors {
 
-struct MPU6050PValue : public SensorValueBase {
+struct MPU6050Value : public SensorValueBase {
     int16_t ax, ay, az;
     int16_t gx, gy, gz;
 };
 
-class MPU6050P : public SensorBase {
+class MPU6050 : public SensorBase {
 public:
-    MPU6050P(uint8_t address = 0x68);
+    MPU6050(uint8_t address = 0x68);
 
     SensorStatus StartMeasurement() override;
     void BackgroundUpdate() override;

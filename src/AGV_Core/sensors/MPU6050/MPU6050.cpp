@@ -1,22 +1,22 @@
-#include "MPU6050P.h"
+#include "MPU6050.h"
 
 namespace AGV_Core {
 namespace Sensors {
 
-MPU6050P::MPU6050P(uint8_t address)
+MPU6050::MPU6050(uint8_t address)
     : SensorBase(ValueType::Custom),
       _addr(address),
       _requested(false)
 {
 }
 
-SensorBase::SensorStatus MPU6050P::StartMeasurement() {
+SensorBase::SensorStatus MPU6050::StartMeasurement() {
     _requestRaw();
     _setStatus(SensorStatus::Busy);
     return SensorStatus::Busy;
 }
 
-void MPU6050P::_requestRaw() {
+void MPU6050::_requestRaw() {
     Wire.beginTransmission(_addr);
     Wire.write(0x3B);
     Wire.endTransmission(false);
@@ -24,7 +24,7 @@ void MPU6050P::_requestRaw() {
     _requested = true;
 }
 
-void MPU6050P::_readRaw() {
+void MPU6050::_readRaw() {
     if (Wire.requestFrom(_addr, (uint8_t)14, (uint8_t)true) != 14) {
         _setStatus(SensorStatus::Error);
         return;
@@ -40,7 +40,7 @@ void MPU6050P::_readRaw() {
     _gy = (Wire.read() << 8) | Wire.read();
     _gz = (Wire.read() << 8) | Wire.read();
 
-    MPU6050PValue* val = new MPU6050PValue();
+    MPU6050Value* val = new MPU6050Value();
     val->ax = _ax;
     val->ay = _ay;
     val->az = _az;
@@ -52,7 +52,7 @@ void MPU6050P::_readRaw() {
     _setStatus(SensorStatus::NewMeasurement);
 }
 
-void MPU6050P::BackgroundUpdate() {
+void MPU6050::BackgroundUpdate() {
     if (!_requested)
         return;
 
