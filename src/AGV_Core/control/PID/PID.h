@@ -12,37 +12,34 @@ public:
     PID() noexcept;
 
     // ---- CONFIGURACIÓN ----
-    void SetFs(T fs) noexcept;
-    void SetFc(T fc) noexcept;   // Filtro derivativo
-    void SetFd(T fd) noexcept;   // Prewarp para proporcional
+    void SetFs(float fs) noexcept;
+    void SetFc(float fc) noexcept;   // Filtro derivativo
 
-    void SetKp(T kp) noexcept;
-    void SetKi(T ki) noexcept;
-    void SetKd(T kd) noexcept;
+    void SetKp(float kp) noexcept;
+    void SetKi(float ki) noexcept;
+    void SetKd(float kd) noexcept;
 
-    void SetInputScale(T s) noexcept;
-    void SetOutputScale(T s) noexcept;
+    void SetInputScale(float s) noexcept;
+    void SetOutputScale(float s) noexcept;
 
-    void SetLimits(T minOut, T maxOut) noexcept;
-    void SetIntegralLimits(T minInt, T maxInt) noexcept;
-    void SetDerivativeLimits(T minD, T maxD) noexcept;
-    void SetProportionalLimits(T minP, T maxP) noexcept;
+    void SetLimits(float minOut, float maxOut) noexcept;
+    void SetIntegralLimits(float minInt, float maxInt) noexcept;
 
     // ---- GETTERS ----
-    T GetFs() const noexcept { return _fs; }
-    T GetFc() const noexcept { return _fc; }
-    T GetFd() const noexcept { return _fd; }
+    float GetFs() const noexcept { return _fs; }
+    float GetFc() const noexcept { return _fc; }
+    float GetFd() const noexcept { return _fd; }
 
-    T GetKp() const noexcept { return _kp; }
-    T GetKi() const noexcept { return _ki; }
-    T GetKd() const noexcept { return _kd; }
+    float GetKp() const noexcept { return _kp; }
+    float GetKi() const noexcept { return _ki; }
+    float GetKd() const noexcept { return _kd; }
 
-    T GetInputScale() const noexcept { return _inputScale; }
-    T GetOutputScale() const noexcept { return _outputScale; }
+    float GetInputScale() const noexcept { return _inputScale; }
+    float GetOutputScale() const noexcept { return _outputScale; }
 
     // ---- OPERACIÓN ----
     void Reset() noexcept;
-    T FeedForward(T error) noexcept;
+    U FeedForward(T error) noexcept;
 
 private:
     void updateDerivativeFilter();
@@ -50,31 +47,29 @@ private:
 
 private:
     // Frecuencias
-    T _fs, _fc, _fd;
+    float _fs, _fc;
 
     // Ganancias PID
-    T _kp, _ki, _kd;
+    float _kp, _ki, _kd;
 
     // Escalas
-    T _inputScale;
-    T _outputScale;
+    float _inputScale;
+    float _outputScale;
 
     // Estado interno
-    T _prevError;
-    T _intState;
-    T _derState;
+    float _prevError;
+    float _intState;
+    float _derState;
 
     // Coeficientes IIR derivativo
-    T ad, bd;
+    float ad, bd;
 
     // Coeficientes integrador
-    T ai0, ai1, bi1;
+    float ai0, ai1, bi1;
 
     // Límites
-    T _minOut, _maxOut;
-    T _minInt, _maxInt;
-    T _minD, _maxD;
-    T _minP, _maxP;
+    float _minOut, _maxOut;
+    float _minInt, _maxInt;
 };
 
 } // namespace Control
