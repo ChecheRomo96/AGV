@@ -28,7 +28,6 @@ public:
     // ---- GETTERS ----
     float GetFs() const noexcept { return _fs; }
     float GetFc() const noexcept { return _fc; }
-    float GetFd() const noexcept { return _fd; }
 
     float GetKp() const noexcept { return _kp; }
     float GetKi() const noexcept { return _ki; }
