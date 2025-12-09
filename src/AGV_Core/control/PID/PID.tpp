@@ -121,7 +121,7 @@ void PID<T,U>::Reset() noexcept {
 // FEEDFORWARD (Compute)
 // =====================================================
 template<typename T, typename U>
-T PID<T,U>::FeedForward(T error) noexcept {
+U PID<T,U>::FeedForward(T error) noexcept {
 
     // ============================
     // 1) Normalizar error
