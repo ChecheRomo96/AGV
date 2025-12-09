@@ -29,47 +29,47 @@ PID<T,U>::PID() noexcept :
 // Setters
 // =====================================================
 template<typename T, typename U>
-void PID<T,U>::SetFs(T fs) noexcept {
+void PID<T,U>::SetFs(float fs) noexcept {
     _fs = fs;
     updateDerivativeFilter();
     updateIntegralFilter();
 }
 
 template<typename T, typename U>
-void PID<T,U>::SetFc(T fc) noexcept {
+void PID<T,U>::SetFc(float fc) noexcept {
     _fc = fc;
     updateDerivativeFilter();
 }
 
 template<typename T, typename U>
-void PID<T,U>::SetKp(T kp) noexcept { _kp = kp; }
+void PID<T,U>::SetKp(float kp) noexcept { _kp = kp; }
 
 template<typename T, typename U>
-void PID<T,U>::SetKi(T ki) noexcept {
+void PID<T,U>::SetKi(float ki) noexcept {
     _ki = ki; 
     updateIntegralFilter();
 }
 
 template<typename T, typename U>
-void PID<T,U>::SetKd(T kd) noexcept {
+void PID<T,U>::SetKd(float kd) noexcept {
     _kd = kd;
     updateDerivativeFilter();
 }
 
 template<typename T, typename U>
-void PID<T,U>::SetInputScale(T s) noexcept { _inputScale = s; }
+void PID<T,U>::SetInputScale(float s) noexcept { _inputScale = s; }
 
 template<typename T, typename U>
-void PID<T,U>::SetOutputScale(T s) noexcept { _outputScale = s; }
+void PID<T,U>::SetOutputScale(float s) noexcept { _outputScale = s; }
 
 template<typename T, typename U>
-void PID<T,U>::SetLimits(T minOut, T maxOut) noexcept {
+void PID<T,U>::SetLimits(float minOut, float maxOut) noexcept {
     _minOut = minOut;
     _maxOut = maxOut;
 }
 
 template<typename T, typename U>
-void PID<T,U>::SetIntegralLimits(T minInt, T maxInt) noexcept {
+void PID<T,U>::SetIntegralLimits(float minInt, float maxInt) noexcept {
     _minInt = minInt;
     _maxInt = maxInt;
 }
