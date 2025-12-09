@@ -5,5 +5,5 @@
     #include "PeriodicSensor/PeriodicSensor.h"
     #include "Ultrasonic/Ultrasonic.h"
     #include "MPU6050/MPU6050.h"
-
+    #include "Sharp/Sharp.h"
 #endif//AGV_UTILS_SENSORS_H
