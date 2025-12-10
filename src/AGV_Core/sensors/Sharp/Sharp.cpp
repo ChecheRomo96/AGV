@@ -1,4 +1,6 @@
 #include "Sharp.h"
+#include <math.h>
+
 
 namespace AGV_Core {
 namespace Sensors {
@@ -14,7 +16,7 @@ Sharp::Sharp(float gA, float gB) noexcept
 // -------------------------------
 SensorBase::SensorStatus Sharp::StartMeasurement() {
     // Aplicar lógica power-law de calibración
-    _value = (_voltage <= 0.01f) ? 999.0f : _gA * std::pow(_voltage, _gB);
+    _value = (_voltage <= 0.01f) ? 999.0f : _gA * expf(_gB * logf(_voltage));    
     return SensorBase::SensorStatus::NewMeasurement;
 }
 
