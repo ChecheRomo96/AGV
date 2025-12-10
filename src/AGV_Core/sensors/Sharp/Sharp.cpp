@@ -16,7 +16,7 @@ Sharp::Sharp(float gA, float gB) noexcept
 // -------------------------------
 SensorBase::SensorStatus Sharp::StartMeasurement() {
     // Aplicar lógica power-law de calibración
-    _value = (_voltage <= 0.01f) ? 999.0f : _gA * expf(_gB * logf(_voltage));    
+    _value = (_voltage <= 0.01f) ? 999.0f : _gA * powf(_voltage, _gB);
     return SensorBase::SensorStatus::NewMeasurement;
 }
 
