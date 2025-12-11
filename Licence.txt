@@ -1,0 +1,41 @@
+AGV Core Framework – Educational & Research License (ERL)
+Copyright (c) 2025 José Manuel Romo
+
+Permission is hereby granted to any individual or organization to use, copy, modify, and merge this software and its documentation, provided that the following conditions are met:
+
+Allowed Uses
+
+This software may be used exclusively for:
+- Educational purposes
+- Academic coursework
+- Teaching and training
+- Research projects
+- Personal, non-commercial experimentation
+
+Modified versions of the software may be created and used under the same restrictions.
+
+Prohibited Uses
+
+The following actions are strictly prohibited:
+- Commercial use of any kind, including but not limited to:
+- Selling the software
+- Selling products that include or depend on the software
+- Using the software in a paid service
+- Using the software in a commercial research or industrial environment
+- Redistribution for commercial purposes, whether in source or binary form.
+- Incorporating this software into any product or system intended for commercial sale or profit.
+- Using this software to develop proprietary or commercial software, whether distributed or not.
+
+Redistribution
+
+Redistribution is permitted only if:
+- The software is provided free of charge, AND
+- This license is included in full, AND
+- The redistribution does not involve commercial benefit in any form.
+
+Disclaimer
+
+This software is provided "as is", without warranty of any kind, express or implied.
+The author shall not be liable for any damages arising from its use.
+
+By using this software, you acknowledge and agree to all the terms above.
