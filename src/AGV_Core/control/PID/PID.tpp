@@ -85,9 +85,9 @@ void PID<T,U>::updateDerivativeFilter() {
         return;
     }
 
-    T Ts = 1.0f / _fs;
-    T wc = 2.0f * M_PI * _fc;
-    T alpha = wc * Ts / (2.0f + wc * Ts);
+    float Ts = 1.0f / _fs;
+    float wc = 2.0f * M_PI * _fc;
+    float alpha = wc * Ts / (2.0f + wc * Ts);
 
     ad = (1 - alpha);
     bd = (2.0f / Ts) * alpha;
@@ -129,44 +129,40 @@ U PID<T,U>::FeedForward(T error) noexcept {
     const float e = static_cast<float>(error) / _inputScale;
 
     // ============================
-    // 2) Proporcional (SIN límites)
+    // 2) Proporcional
     // ============================
     const float P = _kp * e;
 
     // ============================
-    // 3) Derivada filtrada sobre el error
-    //    D_k = ad * D_{k-1} + bd * (e_k - e_{k-1})
+    // 3) Derivada filtrada
+    //    Dstate_k = ad * Dstate_{k-1} + bd * (e_k - e_{k-1})
     // ============================
     const float d_raw = e - _prevError;
-    float D = ad * _derState + bd * d_raw;
-    _derState = D;
+
+    const float Dstate = ad * _derState + bd * d_raw;
+    _derState = Dstate;
+
+    const float D = _kd * Dstate;
 
     // ============================
-    // 4) Anti-windup condicional (tipo MATLAB)
-    //    Decidir si se integra o no
+    // 4) Anti-windup condicional
     // ============================
     float I = _intState;
 
-    // Salida "provisional" sin actualizar integral
     float u_noI = (P + I + D) * _outputScale;
 
     bool integrate = true;
 
-    // Si ya estoy saturado ARRIBA y el error empuja hacia arriba -> NO integro
-    if (u_noI >= _maxOut && e > 0.0f) {
+    if (u_noI >= _maxOut && e > 0.0f)
         integrate = false;
-    }
-    // Si ya estoy saturado ABAJO y el error empuja hacia abajo -> NO integro
-    else if (u_noI <= _minOut && e < 0.0f) {
+    else if (u_noI <= _minOut && e < 0.0f)
         integrate = false;
-    }
 
     if (integrate) {
-        // Integrador Tustin
+        // Integrador Tustin (Ki ya está en ai0 / ai1)
         I = _intState + ai0 * e + ai1 * _prevError;
 
-        // Clamping SOLO de la integral
-        if (I > _maxInt) I = _maxInt;
+        if (I > _maxInt)      I = _maxInt;
         else if (I < _minInt) I = _minInt;
 
         _intState = I;
@@ -185,7 +181,7 @@ U PID<T,U>::FeedForward(T error) noexcept {
     // ============================
     _prevError = e;
 
-    return static_cast<T>(u);
+    return static_cast<U>(u);
 }
 
 } // namespace Control

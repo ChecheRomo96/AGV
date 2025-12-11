@@ -1,41 +1,82 @@
 AGV Core Framework – Educational & Research License (ERL)
-Copyright (c) 2025 José Manuel Romo
 
-Permission is hereby granted to any individual or organization to use, copy, modify, and merge this software and its documentation, provided that the following conditions are met:
+Copyright (c) 2025
+José Manuel Romo and Contributors
 
+Project Lead & Maintainer:
+José Manuel Romo
+
+Each contributor retains copyright to their individual contributions.
+By contributing to this project, you agree that your contributions may be
+distributed under the terms of this license.
+
+Permission is hereby granted to any individual or organization to use, copy,
+modify, and merge this software and its documentation, provided that the
+following conditions are met.
+
+--------------------------------------------------
 Allowed Uses
+--------------------------------------------------
 
-This software may be used exclusively for:
+This software may be used exclusively for non-commercial purposes, including:
+
 - Educational purposes
 - Academic coursework
-- Teaching and training
+- Teaching and training activities
 - Research projects
-- Personal, non-commercial experimentation
+- Personal experimentation and learning
 
-Modified versions of the software may be created and used under the same restrictions.
+Modified versions of the software may be created and used, provided they remain
+subject to the same license terms and restrictions.
 
+For the purposes of this license, "non-commercial use" refers to use that does
+not involve direct or indirect financial gain, compensation, or commercial
+advantage.
+
+--------------------------------------------------
 Prohibited Uses
+--------------------------------------------------
 
-The following actions are strictly prohibited:
-- Commercial use of any kind, including but not limited to:
-- Selling the software
-- Selling products that include or depend on the software
-- Using the software in a paid service
-- Using the software in a commercial research or industrial environment
-- Redistribution for commercial purposes, whether in source or binary form.
-- Incorporating this software into any product or system intended for commercial sale or profit.
-- Using this software to develop proprietary or commercial software, whether distributed or not.
+The following actions are strictly prohibited without explicit written
+permission from the Project Lead:
 
+- Any form of commercial use, including but not limited to:
+  - Selling the software
+  - Selling products or services that include, depend on, or are derived from
+    the software
+  - Using the software as part of a paid service or commercial offering
+  - Use within industrial, corporate, or for-profit research environments
+- Redistribution for commercial purposes, in source or binary form
+- Incorporating this software, in whole or in part, into any product or system
+  intended for commercial sale or profit
+
+--------------------------------------------------
 Redistribution
+--------------------------------------------------
 
-Redistribution is permitted only if:
-- The software is provided free of charge, AND
-- This license is included in full, AND
-- The redistribution does not involve commercial benefit in any form.
+Redistribution is permitted only if all of the following conditions are met:
 
+- The software is provided free of charge
+- This license is included in full
+- No commercial benefit is derived from the redistribution
+
+--------------------------------------------------
+Commercial Licensing
+--------------------------------------------------
+
+Commercial use of this software may be permitted under a separate commercial
+license. Please contact the Project Lead for commercial licensing inquiries.
+
+--------------------------------------------------
 Disclaimer
+--------------------------------------------------
 
-This software is provided "as is", without warranty of any kind, express or implied.
-The author shall not be liable for any damages arising from its use.
+This software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose, and non-infringement.
 
-By using this software, you acknowledge and agree to all the terms above.
+In no event shall the authors or contributors be liable for any claim, damages,
+or other liability arising from the use of this software.
+
+By using, copying, or modifying this software, you acknowledge that you have
+read and understood this license and agree to be bound by its terms.
